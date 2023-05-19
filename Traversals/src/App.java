@@ -20,5 +20,8 @@ public class App {
         // create a BFS instance and perform BFS
         BFS bfs = new BFS();
         bfs.bfs(graph);
+
+        DFS dfs = new DFS();
+        dfs.isConnected(graph);
     }
 }
