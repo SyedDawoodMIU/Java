@@ -1,0 +1,185 @@
+{
+    "$id": "1",
+    "elements": [
+      {
+        "$id": "2",
+        "$type": "UMLClass",
+        "name": "Command",
+        "attributes": [],
+        "methods": [
+          "execute()",
+          "undo()"
+        ],
+        "stereotype": "interface"
+      },
+      {
+        "$id": "3",
+        "$type": "UMLClass",
+        "name": "DepositCommand",
+        "attributes": [
+          "account: Account",
+          "amount: double"
+        ],
+        "methods": [
+          "execute()",
+          "undo()",
+          "DepositCommand(account: Account, amount: double)"
+        ]
+      },
+      {
+        "$id": "4",
+        "$type": "UMLClass",
+        "name": "WithdrawCommand",
+        "attributes": [
+          "account: Account",
+          "amount: double"
+        ],
+        "methods": [
+          "execute()",
+          "undo()",
+          "WithdrawCommand(account: Account, amount: double)"
+        ]
+      },
+      {
+        "$id": "5",
+        "$type": "UMLClass",
+        "name": "TransferCommand",
+        "attributes": [
+          "fromAccount: Account",
+          "toAccount: Account",
+          "amount: double"
+        ],
+        "methods": [
+          "execute()",
+          "undo()",
+          "TransferCommand(fromAccount: Account, toAccount: Account, amount: double)"
+        ]
+      },
+      {
+        "$id": "6",
+        "$type": "UMLClass",
+        "name": "Account",
+        "attributes": [
+          "balance: double"
+        ],
+        "methods": [
+          "deposit(amount: double)",
+          "withdraw(amount: double)",
+          "transferFunds(toAccount: Account, amount: double)",
+          "getBalance(): double"
+        ]
+      },
+      {
+        "$id": "7",
+        "$type": "UMLClass",
+        "name": "TransactionManager",
+        "attributes": [
+          "undoStack: Stack<Command>",
+          "redoStack: Stack<Command>"
+        ],
+        "methods": [
+          "executeCommand(command: Command)",
+          "undo()",
+          "redo()",
+          "TransactionManager()"
+        ]
+      },
+      {
+        "$id": "8",
+        "$type": "UMLClass",
+        "name": "Main",
+        "attributes": [],
+        "methods": [
+          "main(args: String[])"
+        ],
+        "stereotype": "public"
+      }
+    ],
+    "relations": [
+      {
+        "$id": "9",
+        "$type": "UMLGeneralization",
+        "source": "3",
+        "target": "2"
+      },
+      {
+        "$id": "10",
+        "$type": "UMLGeneralization",
+        "source": "4",
+        "target": "2"
+      },
+      {
+        "$id": "11",
+        "$type": "UMLGeneralization",
+        "source": "5",
+        "target": "2"
+      },
+      {
+        "$id": "12",
+        "$type": "UMLAssociation",
+        "source": "6",
+        "target": "2",
+        "end1": {
+          "$ref": "6"
+        },
+        "end2": {
+          "$ref": "2"
+        }
+      },
+      {
+        "$id": "13",
+        "$type": "UMLAssociation",
+        "source": "7",
+        "target": "2",
+        "end1": {
+          "$ref": "7"
+        },
+        "end2": {
+          "$ref": "2"
+        }
+      },
+      {
+        "$id": "14",
+        "$type": "UMLAssociation",
+        "source": "8",
+        "target": "7",
+        "end1": {
+          "$ref": "8"
+        },
+        "end2": {
+          "$ref": "7"
+        }
+      },
+      {
+        "$id": "15",
+        "$type": "UMLAssociation",
+        "source": "8",
+        "target": "6",
+        "end1": {
+          "$ref": "8"
+        },
+        "end2": {
+          "$ref": "6"
+        }
+      }
+    ],
+    "diagrams": [
+      {
+        "$id": "16",
+        "$type": "UMLClassDiagram",
+        "name": "Class Diagram",
+        "root": "2",
+        "elements": [
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8"
+        ],
+        "zoom": 100
+      }
+    ]
+  }
+  
