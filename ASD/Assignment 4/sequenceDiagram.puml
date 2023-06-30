@@ -1,0 +1,58 @@
+@startuml
+
+actor User
+participant "AccountService" as Service
+participant "Account" as Account
+participant "NewAccountSubject" as NewAccountSubject
+participant "BalanceSubject" as BalanceSubject
+participant "HistoryObserver" as HistoryObserver
+participant "SMSSenderObserver" as SMSObserver
+
+User -> Service: createNewAccount()
+activate Service
+Service -> Account: Account(accountnr)
+activate Account
+Account -> AccountDAO: saveAccount(Account)
+activate AccountDAO
+AccountDAO --> Account: success
+deactivate AccountDAO
+Account -> NewAccountSubject: registerNewAccountSubject(Observer)
+activate NewAccountSubject
+Account -> BalanceSubject: registerBalanceSubject(Observer)
+activate BalanceSubject
+
+Service -> Account: notifyNewAccountSubject()
+activate Account
+Account -> NewAccountSubject: notifyObservers(Account)
+activate NewAccountSubject
+NewAccountSubject -> EmailSenderObserver: update(Account)
+activate EmailSenderObserver
+NewAccountSubject --> Account: success
+deactivate NewAccountSubject
+deactivate EmailSenderObserver
+Account --> Service: success
+deactivate Account
+
+
+
+Service -> Service: deposit(Account, amount)
+activate Service
+Service -> Account: notifyBalanceSubject()
+activate Account
+Account -> BalanceSubject: notifyObservers(Account)
+activate BalanceSubject
+BalanceSubject -> HistoryObserver: update(Account)
+activate HistoryObserver
+BalanceSubject -> SMSObserver: update(Account)
+activate SMSObserver
+BalanceSubject --> Account: success
+deactivate BalanceSubject
+deactivate EmailSenderObserver
+deactivate HistoryObserver
+deactivate SMSObserver
+Account --> Service: success
+deactivate Account
+Service --> User: success
+deactivate Service
+
+@enduml

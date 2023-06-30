@@ -1,0 +1,45 @@
+@startuml
+
+
+interface Subject {
+    + addObserver(observer: Observer): void
+    + removeObserver(observer: Observer): void
+    + notifyObservers(): void
+}
+
+interface Observer {
+    + update(count: int): void
+}
+
+
+class Counter implements Subject {
+    - count: int
+    - observers: List<Observer>
+    + getCount(): int
+    + addObserver(observer: Observer): void
+    + removeObserver(observer: Observer): void
+    + increment(): void
+    + decrement(): void
+    - notifyObservers(): void
+}
+
+Counter --> Observer
+
+class TextFrame implements Observer {
+    + update(count: int): void
+}
+
+class RectFrame implements Observer {
+    + update(count: int): void
+}
+
+class OvalFrame implements Observer {
+    + update(count: int): void
+}
+
+class BinaryFrame implements Observer {
+    + update(count: int): void
+}
+
+
+@enduml

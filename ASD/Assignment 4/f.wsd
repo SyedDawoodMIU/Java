@@ -1,0 +1,47 @@
+@startuml
+
+actor User
+
+User -> JFrameCounter: clickIncrementButton()
+JFrameCounter -> CommandHistory: addCommand(Command)
+JFrameCounter -> IncrementCommand: execute()
+IncrementCommand -> Counter: increment()
+Counter -> Counter: increment count
+Counter -> Counter: notifyObservers()
+Counter --> TextFrame: update(count)
+Counter --> RectFrame: update(count)
+Counter --> OvalFrame: update(count)
+Counter --> BinaryFrame: update(count)
+
+User -> JFrameCounter: clickDecrementButton()
+JFrameCounter -> CommandHistory: addCommand(Command)
+JFrameCounter -> DecrementCommand: execute()
+DecrementCommand -> Counter: decrement()
+Counter -> Counter: decrement count
+Counter -> Counter: notifyObservers()
+Counter --> TextFrame: update(count)
+Counter --> RectFrame: update(count)
+Counter --> OvalFrame: update(count)
+Counter --> BinaryFrame: update(count)
+
+User -> CommandHistory: undo()
+CommandHistory -> IncrementCommand: undo()
+IncrementCommand -> Counter: decrement()
+Counter -> Counter: decrement count
+Counter -> Counter: notifyObservers()
+Counter --> TextFrame: update(count)
+Counter --> RectFrame: update(count)
+Counter --> OvalFrame: update(count)
+Counter --> BinaryFrame: update(count)
+
+User -> CommandHistory: redo()
+CommandHistory -> IncrementCommand: redo()
+IncrementCommand -> Counter: increment()
+Counter -> Counter: increment count
+Counter -> Counter: notifyObservers()
+Counter --> TextFrame: update(count)
+Counter --> RectFrame: update(count)
+Counter --> OvalFrame: update(count)
+Counter --> BinaryFrame: update(count)
+
+@enduml

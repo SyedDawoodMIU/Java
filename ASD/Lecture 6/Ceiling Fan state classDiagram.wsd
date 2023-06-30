@@ -1,0 +1,56 @@
+@startuml
+
+interface CeilingFanState {
+    + pullGreen() : CeilingFanState
+    + pullRed() : CeilingFanState
+}
+
+class OffState implements CeilingFanState {
+    
+}
+
+class State1 implements CeilingFanState {
+    
+}
+
+class State2 implements CeilingFanState {
+    
+}
+
+class State3 implements CeilingFanState {
+    
+}
+
+class State4 implements CeilingFanState {
+    
+}
+
+class CeilingFanContext {
+    - currentState: CeilingFanState
+    + pullGreen() : void
+    + pullRed() : void
+    + setState(state: CeilingFanState) : void
+}
+
+CeilingFanContext o-- CeilingFanState
+
+
+
+
+OffState : pullGreen() --> State1
+OffState : pullRed() --> State4
+
+State1 : pullGreen() --> State2
+State1 : pullRed() --> OffState
+
+State2 : pullGreen() --> State3
+State2 : pullRed() --> State1
+
+State3 : pullGreen() --> State4
+State3 : pullRed() --> State2
+
+State4 : pullGreen() --> OffState
+State4 : pullRed() --> State3
+
+@enduml
+

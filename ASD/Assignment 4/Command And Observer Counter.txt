@@ -1,0 +1,210 @@
+import java.util.ArrayList;
+import java.util.List;
+
+interface Observer {
+    void update(int count);
+}
+
+interface Subject {
+    void addObserver(Observer observer);
+    void removeObserver(Observer observer);
+    void notifyObservers();
+}
+
+class Counter implements Subject {
+    private int count;
+    private List<Observer> observers;
+
+    public Counter() {
+        count = 0;
+        observers = new ArrayList<>();
+    }
+
+    public int getCount() {
+        return count;
+    }
+
+    public void addObserver(Observer observer) {
+        observers.add(observer);
+    }
+
+    public void removeObserver(Observer observer) {
+        observers.remove(observer);
+    }
+
+    public void increment() {
+        count++;
+        notifyObservers();
+    }
+
+    public void decrement() {
+        count--;
+        notifyObservers();
+    }
+
+    public void notifyObservers() {
+        for (Observer observer : observers) {
+            observer.update(count);
+        }
+    }
+}
+
+interface Command {
+    void execute();
+    void undo();
+    void redo();
+}
+
+class IncrementCommand implements Command {
+    private Counter counter;
+
+    public IncrementCommand(Counter counter) {
+        this.counter = counter;
+    }
+
+    public void execute() {
+        counter.increment();
+    }
+
+    public void undo() {
+        counter.decrement();
+    }
+
+    public void redo() {
+        counter.increment();
+    }
+}
+
+class DecrementCommand implements Command {
+    private Counter counter;
+
+    public DecrementCommand(Counter counter) {
+        this.counter = counter;
+    }
+
+    public void execute() {
+        counter.decrement();
+    }
+
+    public void undo() {
+        counter.increment();
+    }
+
+    public void redo() {
+        counter.decrement();
+    }
+}
+
+class CommandHistory {
+    private List<Command> history;
+    private int currentIndex;
+
+    public CommandHistory() {
+        history = new ArrayList<>();
+        currentIndex = -1;
+    }
+
+    public void addCommand(Command command) {
+        
+        while (history.size() > currentIndex + 1) {
+            history.remove(history.size() - 1);
+        }
+
+        history.add(command);
+        currentIndex++;
+    }
+
+    public boolean canUndo() {
+        return currentIndex >= 0;
+    }
+
+    public void undo() {
+        if (canUndo()) {
+            Command command = history.get(currentIndex);
+            command.undo();
+            currentIndex--;
+        }
+    }
+
+    public boolean canRedo() {
+        return currentIndex < history.size() - 1;
+    }
+
+    public void redo() {
+        if (canRedo()) {
+            currentIndex++;
+            Command command = history.get(currentIndex);
+            command.redo();
+        }
+    }
+}
+
+class TextFrame implements Observer {
+    private int count;
+
+    public void update(int count) {
+        this.count = count;
+        System.out.println("Text Frame updated: " + count);
+    }
+}
+
+class RectFrame implements Observer {
+    private int count;
+
+    public void update(int count) {
+        this.count = count;
+        System.out.println("Rect Frame updated: " + count);
+    }
+}
+
+class OvalFrame implements Observer {
+    private int count;
+
+    public void update(int count) {
+        this.count = count;
+        System.out.println("Oval Frame updated: " + count);
+    }
+}
+
+class BinaryFrame implements Observer {
+    private int count;
+
+    public void update(int count) {
+        this.count = count;
+        System.out.println("Binary Frame updated: " + Integer.toBinaryString(count));
+    }
+}
+
+public class JFrameCounter {
+    public static void main(String[] args) {
+        Counter counter = new Counter();
+        TextFrame textFrame = new TextFrame();
+        RectFrame rectFrame = new RectFrame();
+        OvalFrame ovalFrame = new OvalFrame();
+        BinaryFrame binaryFrame = new BinaryFrame();
+
+        counter.addObserver(textFrame);
+        counter.addObserver(rectFrame);
+        counter.addObserver(ovalFrame);
+        counter.addObserver(binaryFrame);
+
+        CommandHistory commandHistory = new CommandHistory();
+
+        
+        IncrementCommand incrementCommand = new IncrementCommand(counter);
+        commandHistory.addCommand(incrementCommand);
+        incrementCommand.execute();
+
+        DecrementCommand decrementCommand = new DecrementCommand(counter);
+        commandHistory.addCommand(decrementCommand);
+        decrementCommand.execute();
+
+        if (commandHistory.canUndo()) {
+            commandHistory.undo();
+        }
+
+        if (commandHistory.canRedo()) {
+            commandHistory.redo();
+        }
+    }
+}

@@ -1,0 +1,23 @@
+@startuml
+
+actor User
+
+User -> JFrameCounter: clickIncrementButton()
+JFrameCounter -> Counter: increment()
+Counter -> Counter: increment count
+Counter -> Counter: notifyObservers()
+Counter --> TextFrame: update(count)
+Counter --> RectFrame: update(count)
+Counter --> OvalFrame: update(count)
+Counter --> BinaryFrame: update(count)
+
+User -> JFrameCounter: clickDecrementButton()
+JFrameCounter -> Counter: decrement()
+Counter -> Counter: decrement count
+Counter -> Counter: notifyObservers()
+Counter --> TextFrame: update(count)
+Counter --> RectFrame: update(count)
+Counter --> OvalFrame: update(count)
+Counter --> BinaryFrame: update(count)
+
+@enduml

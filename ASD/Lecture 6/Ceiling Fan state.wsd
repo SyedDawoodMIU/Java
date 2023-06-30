@@ -1,0 +1,37 @@
+
+@startuml
+title Ceiling Fan Sequence Diagram
+
+participant CeilingFanContext
+participant OffState
+participant State1
+participant State2
+participant State3
+participant State4
+
+CeilingFanContext -> OffState: pullGreen()
+OffState -> State1: Change state to State1
+CeilingFanContext -> State1: pullGreen()
+State1 -> State2: Change state to State2
+CeilingFanContext -> State2: pullGreen()
+State2 -> State3: Change state to State3
+CeilingFanContext -> State3: pullGreen()
+State3 -> State4: Change state to State4
+CeilingFanContext -> State4: pullGreen()
+State4 -> OffState: Change state to Off
+
+
+
+CeilingFanContext -> OffState: pullRed()
+OffState -> State4: Change state to State4
+CeilingFanContext -> State4: pullRed()
+State4 -> State3: Change state to State3
+CeilingFanContext -> State3: pullRed()
+State3 -> State2: Change state to State2
+CeilingFanContext -> State2: pullRed()
+State2 -> State1: Change state to State1
+CeilingFanContext -> State1: pullRed()
+State1 -> OffState: Change state to Off
+
+
+@enduml

@@ -1,0 +1,84 @@
+@startuml
+
+
+  class AccountService {
+   }
+
+  class Account {
+    - newAccountSubject: NewAccountSubject
+    + Account(accountnr: long)
+    + registerBalanceSubject(o: Observer): void
+    + removeBalanceSubject(o: Observer): void
+    + notifyBalanceSubject(): void
+    + registerNewAccountSubject(o: Observer): void
+    + removeNewAccountSubject(o: Observer): void
+    + notifyNewAccountSubject(): void
+  }
+
+  class AccountEntry {
+    
+  }
+
+  class Customer {
+   
+  }
+
+  class NewAccountSubject {
+  }
+
+  class BalanceSubject {
+  }
+
+  class EmailSenderObserver {
+    + update(Account account): void
+  }
+
+  class HistoryObserver {
+    + update(Account account): void
+  }
+
+  class SMSSenderObserver {
+    + update(Account account): void
+  }
+
+
+class AccountDAO {
+}
+
+interface Observer {
+    public void update(Account account);
+
+}
+
+interface Subject {
+  public void registerObserver(Observer o);
+
+  public void removeObserver(Observer o);
+
+  public void notifyObservers(Account account);
+
+}
+
+AccountService --> Account
+AccountService --> AccountDAO
+AccountService --> EmailSenderObserver
+AccountService --> HistoryObserver
+AccountService --> SMSSenderObserver
+
+Account --> AccountEntry
+Account --> Customer
+Account --> NewAccountSubject
+Account --> BalanceSubject
+
+
+
+
+EmailSenderObserver <|-- Observer
+HistoryObserver <|-- Observer
+SMSSenderObserver <|-- Observer
+
+
+NewAccountSubject <|-- Subject
+BalanceSubject <|-- Subject
+
+@enduml
