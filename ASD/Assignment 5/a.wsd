@@ -1,0 +1,49 @@
+@startuml
+
+interface ILevel {
+    +calculatePoints(points: int): int
+    +checkLevelUpgrade(totalPoints: int): ILevel
+    +getLevelNumber(): int
+}
+
+class Level1 implements ILevel{
+    -BONUS_POINTS: int
+    -POINTS_THRESHOLD: int
+    +calculatePoints(points: int): int
+    +checkLevelUpgrade(totalPoints: int): ILevel
+    +getLevelNumber(): int
+}
+
+class Level2 implements ILevel{
+    -BONUS_POINTS: int
+    -POINTS_THRESHOLD: int
+    +calculatePoints(points: int): int
+    +checkLevelUpgrade(totalPoints: int): ILevel
+    +getLevelNumber(): int
+}
+
+class Level2_5 implements ILevel {
+    -BONUS_POINTS: int
+    -POINTS_THRESHOLD: int
+    +calculatePoints(points: int): int
+    +checkLevelUpgrade(totalPoints: int): ILevel
+    +getLevelNumber(): int
+}
+
+class Level3 implements ILevel{
+    -BONUS_POINTS: int
+    +calculatePoints(points: int): int
+    +checkLevelUpgrade(totalPoints: int): ILevel
+    +getLevelNumber(): int
+}
+
+class Game {
+    -totalPoints: int
+    -currentLevel: ILevel
+    +Game(initialLevel: ILevel)
+    +play(): void
+}
+
+Game o-- ILevel
+
+@enduml

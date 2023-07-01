@@ -1,0 +1,74 @@
+@startuml
+
+class JFrameCounter {
+}
+
+class CommandHistory {
+}
+
+class IncrementCommand {
+}
+
+class DecrementCommand {
+}
+
+class Counter {
+}
+
+class TextFrame {
+}
+
+class RectFrame {
+}
+
+class OvalFrame {
+}
+
+class BinaryFrame {
+}
+
+interface CounterState {
+    CounterState checkState();
+    int increment();
+    int decrement();
+}
+
+class SingleDigitState {
+}
+
+class DoubleDigitState {
+}
+
+class TripleDigitState {
+}
+
+class Subject {
+    + addObserver(observer: Observer)
+    + removeObserver(observer: Observer)
+    + notifyObservers()
+}
+
+class Observer {
+    + update(value: int)
+}
+
+JFrameCounter --> IncrementCommand : creates
+JFrameCounter --> DecrementCommand : creates
+JFrameCounter --> CommandHistory : uses
+CommandHistory --> IncrementCommand : stores
+CommandHistory --> DecrementCommand : stores
+IncrementCommand --> Counter : modifies
+DecrementCommand --> Counter : modifies
+Counter --> Observer : updates
+Counter --> CounterState : has
+CounterState <|.. SingleDigitState
+CounterState <|.. DoubleDigitState
+CounterState <|.. TripleDigitState
+
+Counter --|> Subject
+Observer <|.. TextFrame
+Observer <|.. RectFrame
+Observer <|.. OvalFrame
+Observer <|.. BinaryFrame
+
+@enduml

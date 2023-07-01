@@ -1,0 +1,25 @@
+@startuml
+
+actor Player
+
+Player -> Game: play()
+Game -> Level1: calculatePoints(points)
+Level1 --> Game: calculatedPoints
+Game -> Level1: checkLevelUpgrade(totalPoints)
+Level1 --> Game: nextLevel
+note left: If points > 10, move to Level 2
+Game -> Level1: getLevel()
+Level1 --> Game: level
+Game --> Player: Display points and level
+
+Player -> Game: play()
+Game -> Level2: calculatePoints(points)
+Level2 --> Game: calculatedPoints
+Game -> Level2: checkLevelUpgrade(totalPoints)
+Level2 --> Game: nextLevel
+Game -> Level2: getLevel()
+Level2 --> Game: level
+Game --> Player: Display points and level
+
+
+@enduml
