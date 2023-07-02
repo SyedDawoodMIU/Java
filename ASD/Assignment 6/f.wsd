@@ -1,0 +1,26 @@
+@startuml
+
+
+note top
+ Not using Composite Pattern
+ 
+  Advantages:
+  - Simpler design
+  - Clear separation of responsibilities
+
+  Disadvantages:
+  - Lack of hierarchical structure handling
+  - Limited flexibility with complex XML structures
+
+Using Composite Pattern
+
+  Advantages:
+  - Hierarchical structure representation
+  - Flexibility for handling complex XML structures
+
+  Disadvantages:
+  - Increased complexity
+  - Potential performance overhead.
+end note
+
+@enduml

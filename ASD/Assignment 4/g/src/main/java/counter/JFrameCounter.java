@@ -7,6 +7,7 @@ import java.awt.Rectangle;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -41,6 +42,7 @@ public class JFrameCounter extends JFrame {
 
             incrementCommand = new IncrementCommand(counter);
             decrementCommand = new DecrementCommand(counter);
+
 
         } catch (Exception e) {
             e.printStackTrace();

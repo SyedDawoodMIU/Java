@@ -1,0 +1,30 @@
+@startuml
+
+class XMLParser {
+  +parse(xml: String): void
+}
+
+class XMLNode {
+  -tag: String
+  -attributes: List<XMLAttribute>
+  -children: List<XMLNode>
+  +XMLNode(tag: String)
+  +getTag(): String
+  +getAttribute(name: String): String
+  +addChild(child: XMLNode): void
+  +getChildren(): List<XMLNode>
+}
+
+class XMLAttribute {
+  -name: String
+  -value: String
+  +XMLAttribute(name: String, value: String)
+  +getName(): String
+  +getValue(): String
+}
+
+XMLParser -> XMLNode
+XMLNode *-> XMLNode : children
+XMLNode o-- XMLAttribute
+
+@enduml

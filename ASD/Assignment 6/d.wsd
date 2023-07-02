@@ -1,0 +1,29 @@
+@startuml
+
+abstract class XMLComponent {
+  +render(): String
+}
+
+class XMLNode {
+  -children: List<XMLComponent>
+  +XMLNode(tag: String)
+  +addChild(child: XMLComponent): void
+  +removeChild(child: XMLComponent): void
+  +getChild(index: int): XMLComponent
+  +render(): String
+}
+
+class XMLAttribute {
+  -name: String
+  -value: String
+  +XMLAttribute(name: String, value: String)
+  +getName(): String
+  +getValue(): String
+  +render(): String
+}
+
+XMLComponent <|- XMLAttribute
+XMLComponent <|-- XMLNode
+XMLNode --> XMLComponent: has XMLComponents 
+
+@enduml

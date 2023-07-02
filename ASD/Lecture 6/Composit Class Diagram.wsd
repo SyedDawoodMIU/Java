@@ -1,0 +1,38 @@
+@startuml
+class Organization {
+  -name: string
+  -departments: List<Department>
+  +addDepartment(department: Department): void
+  +removeDepartment(department: Department): void
+  +getDepartmentByName(name: string): Department
+  +displayHierarchy(): void
+}
+
+abstract class Department {
+  -name: string
+  +getName(): string
+  +displayHierarchy(indentation: int): void
+  +getEmployeesCount(): int
+  +getBudget(): float
+}
+
+class CompositeDepartment {
+  -departments: List<Department>
+  +addDepartment(department: Department): void
+  +removeDepartment(department: Department): void
+  +displayHierarchy(indentation: int): void
+  +getEmployeesCount(): int
+  +getBudget(): float
+}
+
+class LeafDepartment {
+  +displayHierarchy(indentation: int): void
+  +getEmployeesCount(): int
+  +getBudget(): float
+}
+
+Organization "1" *-- "n" Department
+Department <|--- CompositeDepartment
+Department <|--- LeafDepartment
+
+@enduml

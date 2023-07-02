@@ -1,0 +1,22 @@
+@startuml
+actor User
+
+User -> Organization: Create Organization
+User -> LeafDepartment1: Create LeafDepartment (LeafDepartment 1.1)
+User -> LeafDepartment1: Add Employee (Employee 1.1)
+User -> LeafDepartment1: Add Employee (Employee 1.2)
+User -> LeafDepartment2: Create LeafDepartment (LeafDepartment 1.2)
+User -> LeafDepartment2: Add Employee (Employee 2.1)
+User -> LeafDepartment2: Add Employee (Employee 2.2)
+User -> LeafDepartment3: Create LeafDepartment (LeafDepartment 2.1)
+User -> LeafDepartment4: Create LeafDepartment (LeafDepartment 2.2)
+User -> CompositeDepartment1: Create CompositeDepartment (CompositeDepartment 1)
+User -> CompositeDepartment2: Create CompositeDepartment (CompositeDepartment 2)
+User -> CompositeDepartment1: Add Sub-Department (LeafDepartment 1.1)
+User -> CompositeDepartment1: Add Sub-Department (LeafDepartment 1.2)
+User -> CompositeDepartment2: Add Sub-Department (LeafDepartment 2.1)
+User -> CompositeDepartment2: Add Sub-Department (LeafDepartment 2.2)
+User -> CompositeDepartment1: Print Employee Names
+User -> CompositeDepartment2: Print Employee Names
+
+@enduml
