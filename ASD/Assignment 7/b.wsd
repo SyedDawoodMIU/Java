@@ -1,0 +1,25 @@
+@startuml
+
+participant App
+participant CameraRecord
+participant StolenCarHandler
+participant SpeedingCarHandler
+participant UnregisteredCarHandler
+participant UnpaidTicketHandler
+
+App -> CameraRecord: create
+App -> UnpaidTicketHandler: create
+App -> UnregisteredCarHandler: UnregisteredCarHandler(unpaidTicketHandler)
+App -> SpeedingCarHandler: SpeedingCarHandler(unregisteredCarHandler)
+App -> StolenCarHandler: StolenCarHandler(speedingCarHandler)
+App -> StolenCarHandler: handle(cameraRecord)
+StolenCarHandler -> StolenCarHandler: isCarStolen()
+StolenCarHandler -> SpeedingCarHandler: handle
+SpeedingCarHandler -> SpeedingCarHandler: isCarSpeeding()
+SpeedingCarHandler -> UnregisteredCarHandler: handle
+UnregisteredCarHandler -> UnregisteredCarHandler: isCarUnregistered()
+UnregisteredCarHandler -> UnpaidTicketHandler: handle
+UnpaidTicketHandler -> UnpaidTicketHandler: hasUnpaidTickets
+UnpaidTicketHandler --> App: Car with license plate {licensePlate} has no unpaid tickets.
+
+@enduml

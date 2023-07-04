@@ -1,0 +1,37 @@
+@startuml
+interface StoreComponent {
+  + getName(): String
+  + getAddress(): String
+  + getRevenue(): double
+  + ...
+}
+
+class StoreLeaf {
+  - name: String
+  - address: String
+  - revenue: double
+  - ...
+}
+
+class StoreComposite {
+  - name: String
+  - address: String
+  - revenue: double
+  - ...
+  - children: List<StoreComponent>
+  + add(child: StoreComponent): void
+  + remove(child: StoreComponent): void
+  + getChild(index: int): StoreComponent
+}
+
+class Client {
+}
+
+StoreLeaf .|> StoreComponent
+StoreComposite .|> StoreComponent
+
+StoreComposite o-- "0..*" StoreComponent
+
+Client ..> StoreComponent
+
+@enduml

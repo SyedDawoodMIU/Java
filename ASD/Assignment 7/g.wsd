@@ -1,0 +1,33 @@
+@startuml
+
+interface BigChainBrand {
+  - name: String
+  + getProfit(): Money
+}
+
+
+class Location implements BigChainBrand {
+  - name: String
+  - profit: Money
+  - chains: List<BigChainBrand>
+  + getProfit(): Money
+  + getName(): String
+  + getChains(): List<BigChainBrand>
+}
+
+
+class Store  {
+  -name: String
+  + getProfit(): Money
+}
+
+class Money {
+  - amount: BigDecimal
+  - currency: String
+}
+
+BigChainBrand <|-- Store
+BigChainBrand -- Money
+BigChainBrand "1..*" <|-- "1" Location
+
+@enduml

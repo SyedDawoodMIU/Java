@@ -1,0 +1,149 @@
+@startuml
+
+title Sequence Diagram: Increment and Undo
+
+actor User
+
+JFrameCounter -> OrangeHandler: OrangeHandler(null)
+JFrameCounter -> BlueHandler: BlueHandler(OrangeHandler)
+JFrameCounter -> GreenHandler: GreenHandler(BlueHandler)
+JFrameCounter -> RedHandler: RedHandler(GreenHandler)
+
+
+
+JFrameCounter -> CommandHistory: Creates command history
+JFrameCounter -> IncrementCommand: Creates increment command
+JFrameCounter -> DecrementCommand: Creates decrement command
+JFrameCounter -> Counter: Creates counter
+JFrameCounter -> TextFrame: Creates text frame
+JFrameCounter -> OvalFrame: Creates oval frame
+JFrameCounter -> RectFrame: Creates rect frame
+JFrameCounter -> LogObserver: create
+JFrameCounter -> HandlerObserver: create
+JFrameCounter -> HandlerObserver: setHandler(RedHandler)
+JFrameCounter -> Counter: addObserver(handlerObserver)
+JFrameCounter -> Counter: addObserver(logObserver)
+JFrameCounter -> Counter: addObserver(textFrame)
+JFrameCounter -> Counter: addObserver(ovalFrame)
+JFrameCounter -> Counter: addObserver(rectFrame)
+
+User -> JFrameCounter: Clicks increment button
+activate JFrameCounter
+JFrameCounter -> CommandHistory: Stores increment command
+activate CommandHistory
+deactivate CommandHistory
+JFrameCounter -> IncrementCommand: execute()
+activate IncrementCommand
+
+IncrementCommand -> Counter: increment()
+activate Counter
+
+Counter -> State: increment()
+activate State
+State -> State: increment()
+State -> Counter: counterValue
+Counter -> State: checkState()
+State --> Counter: state
+deactivate State
+Counter -> Counter: Notify observers about updated value
+Counter -> TextFrame: update()
+activate TextFrame
+TextFrame -> TextFrame: setText(counterValue)
+deactivate TextFrame
+Counter -> OvalFrame: update()
+activate OvalFrame
+OvalFrame -> OvalFrame: setOvalSize(counterValue)
+deactivate OvalFrame
+Counter -> RectFrame: update()
+activate RectFrame
+RectFrame -> RectFrame: setRectSize(counterValue)
+deactivate RectFrame
+Counter -> LogObserver: update()
+activate LogObserver
+LogObserver -> LogObserver: log(counterValue)
+deactivate LogObserver
+
+Counter -> HandlerObserver: update()
+activate HandlerObserver
+HandlerObserver -> HandlerObserver: handle(counterValue)
+HandlerObserver -> RedHandler: handle(counterValue)
+deactivate HandlerObserver
+activate RedHandler
+RedHandler -> GreenHandler: handle(counterValue)
+deactivate RedHandler
+activate GreenHandler
+GreenHandler -> BlueHandler: handle(counterValue)
+deactivate GreenHandler
+activate BlueHandler
+BlueHandler -> OrangeHandler: handle(counterValue)
+deactivate BlueHandler
+activate OrangeHandler
+OrangeHandler -> OrangeHandler: handle(counterValue)
+deactivate OrangeHandler
+deactivate Counter
+deactivate IncrementCommand
+deactivate JFrameCounter
+
+
+
+User -> JFrameCounter: Clicks undo button
+activate JFrameCounter
+JFrameCounter -> CommandHistory: undo()
+activate CommandHistory
+CommandHistory -> IncrementCommand: undo()
+activate IncrementCommand
+IncrementCommand -> Counter: decrement()
+activate Counter
+Counter -> State: decrement()
+activate State
+State -> State: decrement()
+State --> Counter: counterValue
+Counter -> State: checkState()
+State --> Counter: state
+deactivate State
+Counter -> Counter: Notify observers about updated value
+Counter -> TextFrame: update()
+activate TextFrame
+TextFrame -> TextFrame: setText(counterValue)
+deactivate TextFrame
+Counter -> OvalFrame: update()
+activate OvalFrame
+OvalFrame -> OvalFrame: setOvalSize(counterValue)
+deactivate OvalFrame
+Counter -> RectFrame: update()
+activate RectFrame
+RectFrame -> RectFrame: setRectSize(counterValue)
+deactivate RectFrame
+
+Counter -> LogObserver: update()
+activate LogObserver
+LogObserver -> LogObserver: log(counterValue)
+deactivate LogObserver
+
+Counter -> HandlerObserver: update()
+activate HandlerObserver
+HandlerObserver -> HandlerObserver: handle(counterValue)
+HandlerObserver -> RedHandler: handle(counterValue)
+deactivate HandlerObserver
+activate RedHandler
+RedHandler -> GreenHandler: handle(counterValue)
+deactivate RedHandler
+activate GreenHandler
+GreenHandler -> BlueHandler: handle(counterValue)
+deactivate GreenHandler
+activate BlueHandler
+BlueHandler -> OrangeHandler: handle(counterValue)
+deactivate BlueHandler
+activate OrangeHandler
+OrangeHandler -> OrangeHandler: handle(counterValue)
+deactivate OrangeHandler
+
+deactivate Counter
+deactivate IncrementCommand
+deactivate CommandHistory
+deactivate JFrameCounter
+
+
+
+
+@enduml

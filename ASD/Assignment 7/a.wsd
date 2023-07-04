@@ -1,0 +1,61 @@
+@startuml
+
+class CameraRecord {
+  -licensePlate: String
+  -speed: int
+  -cameraId: int
+  +CameraRecord(licensePlate: String, speed: int, cameraId: int)
+  +getLicensePlate(): String
+  +getSpeed(): int
+  +getCameraId(): int
+}
+
+abstract class Handler {
+  -nextHandler: Handler
+  +Handler(nextHandler: Handler)
+  +handle(cameraRecord: CameraRecord): void
+  +getNextHandler(): Handler
+}
+
+class StolenCarHandler {
+  +StolenCarHandler(nextHandler: Handler)
+  +handle(cameraRecord: CameraRecord): void
+  -isCarStolen(cameraRecord: CameraRecord): boolean
+}
+
+class SpeedingCarHandler {
+  +SpeedingCarHandler(nextHandler: Handler)
+  +handle(cameraRecord: CameraRecord): void
+  -isCarSpeeding(cameraRecord: CameraRecord): boolean
+}
+
+class UnregisteredCarHandler {
+  +UnregisteredCarHandler(nextHandler: Handler)
+  +handle(cameraRecord: CameraRecord): void
+  -isCarUnregistered(cameraRecord: CameraRecord): boolean
+}
+
+class UnpaidTicketHandler {
+  +UnpaidTicketHandler(nextHandler: Handler)
+  +handle(cameraRecord: CameraRecord): void
+  -hasUnpaidTickets(cameraRecord: CameraRecord): boolean
+}
+
+class App {
+  -handler: Handler
+  +App()
+  +processCameraRecords(cameraRecords: List<CameraRecord>): void
+}
+
+CameraRecord "1" --> "1" App
+
+Handler <|-- StolenCarHandler
+Handler <|-- SpeedingCarHandler
+Handler <|-- UnregisteredCarHandler
+Handler <|-- UnpaidTicketHandler
+
+Handler "1" -- "1" Handler: nextHandler
+
+App "1" -- "1" Handler
+
+@enduml
