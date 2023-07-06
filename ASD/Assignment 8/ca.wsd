@@ -1,0 +1,125 @@
+@startuml
+
+interface AudioPlayerUI {
+    +stop()
+    +play()
+    +pause()
+    +next()
+    +previous()
+    +addSong()
+    +removeSong()
+    +undo()
+    +redo()
+    +update(state currentState)
+}
+
+interface Observer {
+    +update(state currentState)
+}
+
+interface Observable {
+    +attach(observer: Observer)
+    +detach(observer: Observer)
+    +notify()
+}
+
+class AudioPlayer implements Observable, Iterator  {
+    -currentState: State
+    -songList: List<Song>
+    -commandStack: Stack<Command>
+    -observers: List<Observer>
+    +stop()
+    +play()
+    +pause()
+    +next()
+    +previous()
+    +addSong()
+    +removeSong()
+    +attach(observer: Observer)
+    +detach(observer: Observer)
+    +notify()
+    +hasNext()
+    +next()
+}
+
+
+class Song {
+    -name: String
+}
+
+interface State {
+    +stop()
+    +play()
+    +pause()
+    +next()
+    +previous()
+}
+
+class StopState {
+    +stop()
+    +play()
+    +pause()
+    +next()
+    +previous()
+}
+
+class PlayState {
+    +stop()
+    +play()
+    +pause()
+    +next()
+    +previous()
+}
+
+class PauseState {
+    +stop()
+    +play()
+    +pause()
+    +next()
+    +previous()
+}
+
+interface Command {
+    +execute()
+    +undo()
+}
+
+class PlayCommand {
+    +execute()
+    +undo()
+}
+
+class PauseCommand {
+    +execute()
+    +undo()
+}
+
+class StopCommand {
+    +execute()
+    +undo()
+}
+
+class CommandStack {
+    -stack: Stack<Command>
+    +push()
+    +pop()
+}
+
+
+AudioPlayerUI -- AudioPlayer
+AudioPlayer -- State
+AudioPlayer "1" -- "0..*" Song
+AudioPlayer --> CommandStack
+State <|.. StopState
+State <|.. PlayState
+State <|.. PauseState
+CommandStack o-- Command
+Command <|.. PlayCommand
+Command <|.. PauseCommand
+Command <|.. StopCommand
+State --> Command
+AudioPlayer -- Observer : notifies
+Observer <|.. AudioPlayerUI
+Observable "1..*" <|-- "1" AudioPlayer
+
+@enduml

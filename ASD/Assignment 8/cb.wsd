@@ -1,0 +1,69 @@
+@startuml
+
+actor Customer
+participant AudioPlayerUI
+participant AudioPlayer
+participant StopState
+participant PlayState
+participant PauseState
+participant CommandStack
+participant PlayCommand
+participant PauseCommand
+participant Song
+
+
+Customer -> AudioPlayerUI: clickPlayButton()
+
+AudioPlayerUI -> PlayCommand: execute()
+PlayCommand -> AudioPlayer: play()
+AudioPlayer -> StopState: play()
+StopState -> Song: play()
+StopState -> PlayState: create()
+AudioPlayer <-- StopState: setState(IState)
+AudioPlayer -> CommandStack: addCommand(ICommand)
+AudioPlayer -> AudioPlayerUI: notifyObservers()
+AudioPlayerUI -> AudioPlayerUI: enableButtons()
+
+Customer -> AudioPlayerUI: clickPlayButton()
+
+AudioPlayerUI -> PlayCommand: execute()
+PlayCommand -> AudioPlayer: play()
+AudioPlayer -> PlayState: play()
+AudioPlayer -> CommandStack: addCommand(ICommand)
+
+Customer -> AudioPlayerUI: clickPauseButton()
+AudioPlayerUI -> PauseCommand: execute()
+PauseCommand -> AudioPlayer: pause()
+AudioPlayer -> PlayState: pause()
+PlayState -> Song: pauseOnCurrentTime()
+PlayState -> PauseState: create()
+AudioPlayer <-- PlayState: setState(IState)
+AudioPlayer -> CommandStack: addCommand(ICommand)
+AudioPlayer -> AudioPlayerUI: notifyObservers()
+AudioPlayerUI -> AudioPlayerUI: enableButtons()
+
+Customer -> AudioPlayerUI: clickUndoButton()
+AudioPlayerUI -> CommandStack: undo()
+CommandStack -> PauseCommand: unexecute() 
+PauseCommand -> AudioPlayer: play()
+AudioPlayer -> PauseState: play()
+PauseState -> Song: playFromLastLocation()
+PauseState -> PlayState: create()
+AudioPlayer <-- PauseState: setState(IState)
+AudioPlayer -> CommandStack: addCommand(ICommand)
+AudioPlayer -> AudioPlayerUI: notifyObservers()
+AudioPlayerUI -> AudioPlayerUI: enableButtons()
+
+Customer -> AudioPlayerUI: clickRedoButton()
+AudioPlayerUI -> CommandStack: redo()
+CommandStack -> PlayCommand: unexecute() 
+PlayCommand -> AudioPlayer: pause()
+AudioPlayer -> PlayState: pause()
+PlayState -> Song: pauseOnCurrentTime()
+PlayState -> PauseState: create()
+AudioPlayer <-- PlayState: setState(IState)
+AudioPlayer -> CommandStack: addCommand(ICommand)
+AudioPlayer -> AudioPlayerUI: notifyObservers()
+AudioPlayerUI -> AudioPlayerUI: enableButtons()
+
+@enduml

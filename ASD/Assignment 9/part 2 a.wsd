@@ -1,0 +1,126 @@
+@startuml
+
+class Calendar {
+  - name: String
+  - appointments: Appointment[]
+  + addAppointment(appointment: Appointment): void
+  + removeAppointment(appointment: Appointment): void
+
+}
+
+class Appointment {
+  - startDate: Date
+  - startTime: Time
+  - endDate: Date
+  - endTime: Time
+  - name: String
+  - description: String
+}
+
+class User {
+  - username: String
+  - password: String
+  + login(username: String, password: String): void
+}
+
+
+class YearlyView {
+}
+
+class MonthlyView {
+}
+
+class WeeklyView {
+}
+
+class DailyView {
+}
+
+interface IViewObserver {
+  + display(): void
+  + update(): void
+}
+
+
+abstract class Subject {
+  + attach(observer: Observer): void
+  + detach(observer: Observer): void
+  + notify(): void
+}
+
+interface Command {
+  + execute(): void
+  + undo(): void
+  + redo(): void
+}
+
+interface NotificationStrategy {
+  + notify(user: User, appointment: Appointment): void
+}
+
+class CalendarApp {
+  - instance: CalendarApp
+  - calendar: Calendar
+  - views: View[]
+  - commandHistory: CommandHistory
+  - notificationContext: NotificationContext
+  - constructor()
+  + getInstance(): CalendarApp
+  + createAppointment(appointmentData: Appointment): void
+  + removeAppointment(appointmentData: Appointment): void
+  + undo(): void
+  + redo(): void
+}
+
+class CreateAppointmentCommand {
+}
+
+class RemoveAppointmentCommand {
+}
+
+class CommandHistory {
+  + add(command: Command): void
+  + undo(): void
+  + redo(): void
+}
+
+class EmailNotificationStrategy {
+}
+
+class WhatsappNotificationStrategy {
+}
+
+class NotificationContext {
+  - strategy: NotificationStrategy
+  + setStrategy(strategy: NotificationStrategy): void
+  + notify(user: User, appointment: Appointment): void
+}
+
+IViewObserver <|-- YearlyView
+IViewObserver <|-- MonthlyView
+IViewObserver <|-- WeeklyView
+IViewObserver <|-- DailyView
+
+Subject <|-- Calendar
+
+Command <|.. CreateAppointmentCommand
+Command <|.. RemoveAppointmentCommand
+
+NotificationStrategy <|.. EmailNotificationStrategy
+NotificationStrategy <|.. WhatsappNotificationStrategy
+
+CalendarApp "1" --> "1" CalendarApp : instance
+CalendarApp "1" --> "*" IViewObserver
+CalendarApp "1" --> "1" Calendar
+Calendar -- "*" Appointment
+Calendar -- CreateAppointmentCommand
+Calendar -- RemoveAppointmentCommand
+CalendarApp "1" --> "1" CommandHistory
+CalendarApp "1" --> "1" NotificationContext
+CalendarApp --> Command : executes
+IViewObserver --> Subject : observes
+NotificationContext -- NotificationStrategy
+CalendarApp -- Appointment
+CalendarApp -- User
+
+@enduml
