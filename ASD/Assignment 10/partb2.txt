@@ -1,0 +1,28 @@
+@startuml
+
+title Sequence Diagram for Car Racing Framework
+
+participant "User" as user
+participant "RaceApplication" as app
+participant "WindowFrame" as frame
+participant "CarImpl" as car
+participant "JumpCommand" as jumpCommand
+participant "SpeedChangeCommand" as speedChangeCommand
+participant "LoggingService" as loggingService
+participant "DAOService" as daoService
+
+user -> app: click increment button
+app -> frame: print()
+app -> car: increaseSpeed()
+car -> loggingService: logSpeed()
+car -> daoService: setSpeed()
+daoService -> car: car.speed = 31
+
+user -> app: click jump button
+app -> jumpCommand: execute()
+jumpCommand -> car: jump()
+car -> loggingService: logSpeed()
+car -> daoService: setSpeed()
+daoService -> car: car.speed = 100
+
+@enduml

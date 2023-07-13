@@ -1,0 +1,81 @@
+@startuml
+
+class WeatherData {
+  +temperature: float
+  +humidity: float
+  +pressure: float
+}
+
+interface Display {
+  +display()
+}
+
+class StatisticsDisplay implements Display {
+  +displayStatistics()
+}
+
+class GeneralDisplay implements Display {
+  +displayWeatherData()
+}
+
+class ForecastDisplay implements Display {
+  +displayForecast()
+}
+
+class ForecastHistoryDisplay implements Display {
+  +displayForecastHistory()
+}
+
+class StatisticsHistoryDisplay implements Display {
+  +displayStatisticsHistory()
+}
+
+class WeatherController {
+  +currentTemperature: float
+  +currentHumidity: float
+  +currentPressure: float
+  +averageTemperature: float
+  +minimumTemperature: float
+  +maximumTemperature: float
+  +forecast: string
+  +addNewWeatherData(weatherData: WeatherData)
+  +computeForecast()
+  +computeStatistics()
+  +getDisplays(): List<Display>
+}
+
+class WeatherDataReceiver {
+  +receiveWeatherData()
+}
+
+class EmailWeatherDataReceiver implements WeatherDataReceiver {
+  +receiveWeatherData()
+}
+
+class WebserviceWeatherDataReceiver implements WeatherDataReceiver {
+  +receiveWeatherData()
+}
+
+class SMSWeatherDataReceiver implements WeatherDataReceiver {
+  +receiveWeatherData()
+}
+
+class ForecastAlgorithm {
+  +computeForecast(weatherData: WeatherData): string
+}
+
+class NorthAmericaForecastAlgorithm implements ForecastAlgorithm {
+  +computeForecast(weatherData: WeatherData): string
+}
+
+class SouthAmericaForecastAlgorithm implements ForecastAlgorithm {
+  +computeForecast(weatherData: WeatherData): string
+}
+
+WeatherController *-- WeatherData
+WeatherController o-- Display
+WeatherController *-- WeatherDataReceiver
+WeatherController o-- ForecastAlgorithm
+
+
+@enduml

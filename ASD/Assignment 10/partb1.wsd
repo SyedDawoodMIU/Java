@@ -1,0 +1,100 @@
+@startuml
+
+package framework {
+  interface Car {
+    +speed: int
+    +increaseSpeed()
+    +decreaseSpeed()
+    +logSpeed()
+    +jump()
+  }
+
+  interface Listener {
+    +onSpeedChanged(int newSpeed)
+  }
+
+  class Logger {
+    +log(int newSpeed)
+  }
+
+  class DAO {
+    +getSpeed()
+    +setSpeed(int newSpeed)
+  }
+
+  class CarImpl implements Car {
+    +speed: int
+    +listener: Listener
+
+    +increaseSpeed()
+    +decreaseSpeed()
+    +logSpeed()
+    +jump()
+  }
+}
+
+package application {
+  class RaceApplication {
+    +Car car
+    +WindowFrame windowFrame
+    +Button incrementButton
+    +Button jumpButton
+    +Listener listener
+
+    +init()
+    +incrementSpeed()
+    +decreaseSpeed()
+    +jump()
+  }
+
+  class WindowFrame implements IFrameObserver {
+  }
+
+  class JumpCommand {
+    +car: Car
+
+    +execute()
+  }
+
+  class SpeedChangeCommand {
+    +car: Car
+    +direction: int
+
+    +execute()
+  }
+
+  class LoggingService {
+    +logSpeed(int newSpeed)
+  }
+
+  class DAOService {
+    +getSpeed()
+    +setSpeed(int newSpeed)
+  }
+
+  interface ICommand
+  {
+    execute()
+  }
+
+  interface IFrameObserver
+  {
+    print()
+  }
+}
+
+CarImpl o-- Listener
+CarImpl o-- Logger
+CarImpl o-- DAO
+
+RaceApplication o-- ICommand
+RaceApplication o-- IFrameObserver
+
+ICommand o-- Car
+ICommand -- Listener
+
+
+JumpCommand <-- ICommand
+SpeedChangeCommand <-- ICommand
+
+@enduml

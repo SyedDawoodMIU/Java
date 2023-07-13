@@ -1,0 +1,203 @@
+@startuml
+Package "Shopping" {
+
+  class Product {
+    + getId(): String
+    + getName(): String
+    + getPrice(): double
+  }
+
+  class ProductCatalogue {
+    + getName(): String
+  }
+
+  class ProductCategory {
+    - products: List<ProductCatalogue>
+    + addProduct(product: ProductCatalogue): void
+    + removeProduct(product: ProductCatalogue): void
+    + getProducts(): ProductCatalogue
+  }
+
+  class ProductDAO {
+    + getById(productId: String): Product
+    + save(product: Product): void
+    + update(product: Product): void
+    + delete(product: Product): void
+  }
+
+  class ProductCatalogueDAO {
+    + getById(catalogueId: String): ProductCatalogue
+    + save(catalogue: ProductCatalogue): void
+    + update(catalogue: ProductCatalogue): void
+    + delete(catalogue: ProductCatalogue): void
+  }
+
+  ProductCategory "1" o-- "*" ProductCatalogue
+  ProductCatalogue <|.. Product
+  ProductCatalogue <|.. ProductCategory
+  ProductDAO --> Product
+  ProductCatalogueDAO --> ProductCatalogue
+
+  interface Payment {
+    + makePayment(): void
+  }
+
+  class CreditCardPayment {
+    + makePayment(): void
+  }
+
+  class PayPalPayment {
+    + makePayment(): void
+  }
+
+  class PaymentDAO {
+    + getById(paymentId: String): Payment
+    + save(payment: Payment): void
+    + update(payment: Payment): void
+    + delete(payment: Payment): void
+  }
+
+  Payment <|.. CreditCardPayment
+  Payment <|.. PayPalPayment
+  PaymentDAO --> Payment
+
+  class ShoppingCart {
+    - id: String
+    - items: Map<String, Integer>
+    + addItem(productId: String, quantity: Integer): void
+    + removeItem(productId: String): void
+    + updateQuantity(productId: String, quantity: Integer): void
+    + getContent(): Map<String, Integer>
+    + checkout(): Order
+  }
+
+  class ShoppingCartDAO {
+    + getById(cartId: String): ShoppingCart
+    + save(cart: ShoppingCart): void
+    + update(cart: ShoppingCart): void
+    + delete(cart: ShoppingCart): void
+  }
+
+  class Order {
+    - orderNumber: String
+    - payment: Payment
+    - customerInfo: CustomerInfo
+    - shippingAddress: Address
+    - billingAddress: Address
+    + addPayment(payment: Payment): void
+    + addCustomerInfo(customerInfo: CustomerInfo): void
+    + addShippingAddress(address: Address): void
+    + addBillingAddress(address: Address): void
+    + getContent(): String
+    + placeOrder(): void
+  }
+
+  class OrderDAO {
+    + getById(orderId: String): Order
+    + save(order: Order): void
+    + update(order: Order): void
+    + delete(order: Order): void
+  }
+
+  class CustomerInfo {
+    - name: String
+    - email: String
+    - phone: String
+    + setName(name: String): void
+    + setEmail(email: String): void
+    + setPhone(phone: String): void
+  }
+
+  class CustomerInfoDAO {
+    + getById(customerId: String): CustomerInfo
+    + save(customerInfo: CustomerInfo): void
+    + update(customerInfo: CustomerInfo): void
+    + delete(customerInfo: CustomerInfo): void
+  }
+
+  class Address {
+    - street: String
+    - city: String
+    - zip: String
+    + setStreet(street: String): void
+    + setCity(city: String): void
+    + setZip(zip: String): void
+  }
+
+  class AddressDAO {
+    + getById(addressId: String): Address
+    + save(address: Address): void
+    + update(address: Address): void
+    + delete(address: Address): void
+  }
+
+  class ProductService {
+    - productDAO: ProductDAO
+    + getProductById(productId: String): Product
+    + saveProduct(product: Product): void
+    + updateProduct(product: Product): void
+    + deleteProduct(product: Product): void
+    
+  }
+
+  class PaymentService {
+    - paymentDAO: PaymentDAO
+    + getPaymentById(paymentId: String): Payment
+    + savePayment(payment: Payment): void
+    + updatePayment(payment: Payment): void
+    + deletePayment(payment: Payment): void
+  }
+
+  class ShoppingCartService {
+    - shoppingCartDAO: ShoppingCartDAO
+    - productDAO: ProductDAO
+    + getShoppingCartById(cartId: String): ShoppingCart
+    + saveShoppingCart(cart: ShoppingCart): void
+    + updateShoppingCart(cart: ShoppingCart): void
+    + deleteShoppingCart(cart: ShoppingCart): void
+    + addItemToCart(cartId: String, productId: String, quantity: Integer): void
+    + removeItemFromCart(cartId: String, productId: String): void
+    + updateItemQuantity(cartId: String, productId: String, quantity: Integer): void
+    + checkout(cartId: String): Order
+  }
+
+  class OrderService {
+    - orderDAO: OrderDAO
+    - paymentDAO: PaymentDAO
+    - customerInfoDAO: CustomerInfoDAO
+    - addressDAO: AddressDAO
+    + getOrderById(orderId: String): Order
+    + saveOrder(order: Order): void
+    + updateOrder(order: Order): void
+    + deleteOrder(order: Order): void
+    + addPaymentToOrder(orderId: String, payment: Payment): void
+    + addCustomerInfoToOrder(orderId: String, customerInfo: CustomerInfo): void
+    + addShippingAddressToOrder(orderId: String, address: Address): void
+    + addBillingAddressToOrder(orderId: String, address: Address): void
+    + placeOrder(orderId: String): void
+  }
+
+  ProductService --> ProductCatalogueDAO
+  ProductService --> ProductDAO
+  ProductService --ShoppingCart
+  PaymentService --> PaymentDAO
+  ShoppingCartService --> ShoppingCartDAO
+  ShoppingCartService -- ShoppingCart
+  OrderService -- Order
+  PaymentService -- Order
+  OrderService --> OrderDAO
+  OrderService --> PaymentDAO
+  OrderService --> CustomerInfoDAO
+  OrderService --> AddressDAO
+}
+
+ShoppingCart "1" o-- "*" Product
+ShoppingCart "1" o-- "1" Order
+Order "1" o-- "1" Payment
+Order "1" o-- "1" CustomerInfo
+Order "1" o-- "1" Address
+CustomerInfo <-- CreditCardPayment
+CustomerInfo <-- PayPalPayment
+Address <-- CustomerInfo
+
+@enduml
