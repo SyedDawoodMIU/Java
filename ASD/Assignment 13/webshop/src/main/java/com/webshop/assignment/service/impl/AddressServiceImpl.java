@@ -54,14 +54,14 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     public void deleteByID(Long id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'deleteByID'");
+
+        addressDAO.deleteById(id);
     }
 
     @Override
     public Address findByUserPostAndCommentId(Long userId, Long postId, Long commentId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'findByUserPostAndCommentId'");
+
+        return addressDAO.findByUserPostAndCommentId(userId, postId, commentId);
     }
 
 }

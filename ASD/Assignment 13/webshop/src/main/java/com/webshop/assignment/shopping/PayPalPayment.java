@@ -1,6 +1,6 @@
 package com.webshop.assignment.shopping;
 
-public class PayPalPayment implements Payment {
+public class PayPalPayment extends Payment {
     private String id;
     private String currency;
 

@@ -1,28 +1,13 @@
-package service;
+package com.webshop.assignment.service;
+import com.webshop.assignment.shopping.Payment;
 
-import dao.PaymentDAO;
-import shopping.Payment;
+public interface PaymentService {
 
-public class PaymentService {
-    private PaymentDAO paymentDAO;
+    public Payment getPaymentById(String paymentId);
 
-    public PaymentService() {
-        paymentDAO = new PaymentDAO();
-    }
+    public void savePayment(Payment payment);
 
-    public Payment getPaymentById(String paymentId) {
-        return paymentDAO.getById(paymentId);
-    }
+    public void updatePayment(Payment payment);
 
-    public void savePayment(Payment payment) {
-        paymentDAO.save(payment);
-    }
-
-    public void updatePayment(Payment payment) {
-        paymentDAO.update(payment);
-    }
-
-    public void deletePayment(Payment payment) {
-        paymentDAO.delete(payment);
-    }
+    public void deletePayment(Payment payment);
 }
