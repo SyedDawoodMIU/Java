@@ -1,15 +1,9 @@
 package org.project;
 
-import org.project.annotations.Autowired;
-import org.project.annotations.Service;
 import org.project.services.IService2;
 import org.project.services.MyService2;
-import org.reflections.Reflections;
-
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 public class Main {
     private static List<Object> serviceObjectMap = new ArrayList<>();

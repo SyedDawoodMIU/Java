@@ -1,22 +1,29 @@
 package org.project;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import org.project.annotations.Autowired;
 import org.project.annotations.Qualifier;
 import org.project.annotations.Service;
+import org.project.annotations.Value;
 import org.reflections.Reflections;
 
 public class MySpringFramework {
     private Map<String, Object> beans = new HashMap<>();
+    private Properties properties = new Properties();
 
     public void scan(String basePackage) throws Exception {
         Reflections reflections = new Reflections(basePackage);
+        loadProperties();
 
         Set<Class<?>> serviceTypes = reflections.getTypesAnnotatedWith(Service.class);
         for (Class<?> serviceClass : serviceTypes) {
@@ -34,6 +41,17 @@ public class MySpringFramework {
             performSetterInjection(serviceClass);
         }
         performFieldInjection();
+    }
+
+    private void loadProperties() throws IOException {
+        try (InputStream input = getClass().getClassLoader().getResourceAsStream("application.properties")) {
+            if (input == null) {
+                throw new FileNotFoundException("application.properties file not found");
+            }
+            properties.load(input);
+        } catch (IOException e) {
+            throw new IOException("Error loading application.properties file: " + e.getMessage());
+        }
     }
 
     private void performConstructorInjection(Class<?> serviceClass)
@@ -61,9 +79,21 @@ public class MySpringFramework {
             if (method.isAnnotationPresent(Autowired.class)) {
                 Class<?>[] parameterTypes = method.getParameterTypes();
                 if (parameterTypes.length == 1) {
-                    Object argument = getBean(parameterTypes[0]);
-                    if (argument != null) {
-                        method.invoke(beans.get(serviceClass.getName()), argument);
+
+                    Qualifier qualifierAnnotation = method.getAnnotation(Qualifier.class);
+                    String qualifierValue = qualifierAnnotation.value();
+                    Object instance;
+                    if (!qualifierValue.isEmpty()) {
+                        instance = getBeanByQualifier(parameterTypes[0], qualifierValue);
+                        if (instance != null) {
+                            method.invoke(beans.get(serviceClass.getName()), instance);
+                        }
+                    } else {
+
+                        instance = getBean(parameterTypes[0]);
+                        if (instance != null) {
+                            method.invoke(beans.get(serviceClass.getName()), instance);
+                        }
                     }
                 }
             }
@@ -79,19 +109,32 @@ public class MySpringFramework {
                     if (field.isAnnotationPresent(Autowired.class)) {
                         Qualifier qualifierAnnotation = field.getAnnotation(Qualifier.class);
                         String qualifierValue = qualifierAnnotation.value();
-
+                        Object instance;
                         if (!qualifierValue.isEmpty()) {
-                            Object instance = getBeanByQualifier(field.getType(), qualifierValue);
+                            instance = getBeanByQualifier(field.getType(), qualifierValue);
                             if (instance != null) {
                                 field.setAccessible(true);
                                 field.set(serviceInstance, instance);
                             }
                         } else {
-                            Object instance = getBean(field.getType());
+                            instance = getBean(field.getType());
                             if (instance != null) {
                                 field.setAccessible(true);
                                 field.set(serviceInstance, instance);
                             }
+                        }
+
+                    }
+
+                    if (field.isAnnotationPresent(Value.class)) {
+                        Value valueAnnotation = field.getAnnotation(Value.class);
+                        String propertyKey = valueAnnotation.value();
+                        String propertyValue = properties.getProperty(propertyKey);
+                        if (propertyValue != null) {
+                            field.setAccessible(true);
+                            Object instance = field.getType().getConstructor(String.class).newInstance(propertyValue);
+                            field.set(serviceInstance, instance);
+
                         }
                     }
                 }
@@ -121,13 +164,16 @@ public class MySpringFramework {
     }
 
     private Object getBeanByQualifier(Class<?> type, String qualifierValue) {
-        for (Object bean : beans.values()) {
-            if (type.isInstance(bean)) {
-                Qualifier qualifier = bean.getClass().getAnnotation(Qualifier.class);
-                if (qualifier != null && qualifier.value().equals(qualifierValue)) {
-                    return bean;
+        try {
+            for (Object theClass : beans.values()) {
+                Class<?>[] interfaces = theClass.getClass().getInterfaces();
+                for (Class<?> theInterface : interfaces) {
+                    if (theInterface == type && theClass.getClass().getName().equals(qualifierValue))
+                        return theClass;
                 }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return null;
     }
