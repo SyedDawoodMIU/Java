@@ -9,11 +9,8 @@ public class MyService2 implements IService2 {
     private IService myService;
 
     @Autowired
-    public void setMyService(IService myService) {
+    public MyService2(IService myService) {
         this.myService = myService;
-    }
-
-    public MyService2() {
         System.out.println("MyService2 constructor");
     }
 

@@ -2,6 +2,7 @@ package org.project;
 
 import org.project.annotations.Autowired;
 import org.project.annotations.Service;
+import org.project.services.IService2;
 import org.project.services.MyService2;
 import org.reflections.Reflections;
 
@@ -20,11 +21,9 @@ public class Main {
             framework.scan("org.project");
             // framework.performDI();
 
-            MyService2 myService2 = (MyService2) framework.getBean(MyService2.class);
+            MyService2 myService2 = (MyService2) framework.getBean(IService2.class);
             System.out.println(myService2.getHello());
         } catch (Exception e) {
-           
-
 
         }
 
