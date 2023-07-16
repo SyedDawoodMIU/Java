@@ -19,7 +19,6 @@ public class Main {
         try {
             MySpringFramework framework = new MySpringFramework();
             framework.scan("org.project");
-            // framework.performDI();
 
             MyService2 myService2 = (MyService2) framework.getBean(IService2.class);
             System.out.println(myService2.getHello());
