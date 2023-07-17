@@ -7,11 +7,13 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import org.project.annotations.Autowired;
+import org.project.annotations.Profile;
 import org.project.annotations.Qualifier;
 import org.project.annotations.Service;
 import org.project.annotations.Value;
@@ -20,6 +22,7 @@ import org.reflections.Reflections;
 public class MySpringFramework {
     private Map<String, Object> beans = new HashMap<>();
     private Properties properties = new Properties();
+    private String[] activeProfiles;
 
     public static void run(Class<?> primarySource, String... args) {
         try {
@@ -39,11 +42,14 @@ public class MySpringFramework {
 
         Set<Class<?>> serviceTypes = reflections.getTypesAnnotatedWith(Service.class);
         for (Class<?> serviceClass : serviceTypes) {
-            Constructor<?>[] constructors = serviceClass.getConstructors();
-
-            if (constructors.length == 1 && constructors[0].getParameterCount() == 0) {
-                Object instance = serviceClass.getDeclaredConstructor().newInstance();
-                beans.put(serviceClass.getName(), instance);
+            Profile profileAnnotation = serviceClass.getAnnotation(Profile.class);
+            if (profileAnnotation != null) {
+                String[] profileValues = profileAnnotation.value();
+                if (shouldInstantiateBean(profileValues)) {
+                    instantiateBean(serviceClass);
+                }
+            } else {
+                instantiateBean(serviceClass);
             }
 
         }
@@ -55,15 +61,48 @@ public class MySpringFramework {
         performFieldInjection();
     }
 
+    private void instantiateBean(Class<?> serviceClass)
+            throws InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+        Constructor<?>[] constructors = serviceClass.getConstructors();
+
+        if (constructors.length == 1 && constructors[0].getParameterCount() == 0) {
+            Object instance = serviceClass.getDeclaredConstructor().newInstance();
+            beans.put(serviceClass.getName(), instance);
+        }
+    }
+
     private void loadProperties(Class<?> primarySource) throws IOException {
         try (InputStream input = primarySource.getClassLoader().getResourceAsStream("application.properties")) {
             if (input == null) {
                 throw new FileNotFoundException("application.properties file not found");
             }
             properties.load(input);
+            activeProfiles = loadActiveProfiles(properties);
         } catch (IOException e) {
             throw new IOException("Error loading application.properties file: " + e.getMessage());
         }
+    }
+
+    private String[] loadActiveProfiles(Properties properties) {
+        String activeProfiles = properties.getProperty("spring.profiles.active");
+        if (activeProfiles != null && !activeProfiles.isEmpty()) {
+            return activeProfiles.split(",");
+        }
+        return new String[0];
+    }
+
+    private boolean shouldInstantiateBean(String[] profileValues) {
+        if (profileValues.length == 0) {
+            return true; // If no specific profiles are specified, instantiate the bean for all profiles
+        }
+
+        for (String profile : activeProfiles) {
+            if (Arrays.asList(profileValues).contains(profile)) {
+                return true; // If the bean's profile matches the active profile, instantiate the bean
+            }
+        }
+
+        return false;
     }
 
     private void performConstructorInjection(Class<?> serviceClass)

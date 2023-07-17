@@ -1,9 +1,12 @@
 package org.project;
 
 import org.project.annotations.Autowired;
+import org.project.annotations.Profile;
 import org.project.services.IService2;
 
 @org.project.annotations.Service
+@Profile({ "dev", "prod" })
+
 public class Main implements Runnable {
 
     @Autowired
