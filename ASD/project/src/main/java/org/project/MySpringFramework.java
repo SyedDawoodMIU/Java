@@ -93,7 +93,7 @@ public class MySpringFramework {
      * @see <a href="https://github.com/ronmamo/reflections">Reflections library</a>
      * @see <a href="https://github.com/jmrozanec/cron-utils">CronUtils library</a>
      */
-    public void scan(Class<?> primarySource) throws Exception {
+    private void scan(Class<?> primarySource) throws Exception {
         Reflections reflections = new Reflections(primarySource.getPackage().getName());
         scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
         loadProperties(primarySource);
@@ -287,7 +287,7 @@ public class MySpringFramework {
      * If a field is annotated with @Value, the framework will attempt to inject a
      * value from the properties file with the specified key.
      */
-    public void performFieldInjection() {
+    private void performFieldInjection() {
         try {
             for (Object serviceInstance : beans.values()) {
                 Class<?> serviceClass = serviceInstance.getClass();
@@ -341,7 +341,7 @@ public class MySpringFramework {
      * @param interfaceClass the interface class of the bean
      * @return an instance of the bean that implements the specified interface, or
      */
-    public Object getBean(Class<?> interfaceClass) {
+    private Object getBean(Class<?> interfaceClass) {
         try {
             for (Object theClass : beans.values()) {
                 Class<?>[] interfaces = theClass.getClass().getInterfaces();
@@ -362,7 +362,7 @@ public class MySpringFramework {
      * @param beanName the name of the bean to retrieve
      * @return the bean instance with the specified name, or null if not found
      */
-    public Object getBean(String beanName) {
+    private Object getBean(String beanName) {
         return beans.get(beanName);
     }
 
@@ -507,7 +507,7 @@ public class MySpringFramework {
      * the existing list of event handlers.
      * 
      */
-    public void registerEventListner() throws InstantiationException, IllegalAccessException, IllegalArgumentException,
+    private void registerEventListner() throws InstantiationException, IllegalAccessException, IllegalArgumentException,
             InvocationTargetException, NoSuchMethodException, SecurityException {
         for (Object bean : beans.values()) {
             Class<?> beanClass = bean.getClass();
