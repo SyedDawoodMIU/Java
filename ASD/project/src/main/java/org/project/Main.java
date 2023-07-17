@@ -2,6 +2,7 @@ package org.project;
 
 import org.project.annotations.Autowired;
 import org.project.annotations.Profile;
+import org.project.annotations.Scheduled;
 import org.project.services.IService2;
 
 @org.project.annotations.Service
@@ -18,6 +19,8 @@ public class Main implements Runnable {
     }
 
     @Override
+    @Scheduled(cron = "0 15 10 ? * *")
+    // @Scheduled(fixedRate = 2)
     public void run() {
         System.out.println(myService2.getHello());
     }

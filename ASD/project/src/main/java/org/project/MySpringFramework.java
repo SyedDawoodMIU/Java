@@ -1,5 +1,20 @@
 package org.project;
 
+import java.time.Duration;
+import java.time.ZonedDateTime;
+import java.time.temporal.Temporal;
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import com.cronutils.model.Cron;
+import com.cronutils.model.CronType;
+import com.cronutils.model.definition.CronDefinitionBuilder;
+import com.cronutils.model.time.ExecutionTime;
+import com.cronutils.model.time.generator.*;
+import com.cronutils.parser.CronParser;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -7,22 +22,33 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.ScheduledExecutorService;
+
 import org.project.annotations.Autowired;
 import org.project.annotations.Profile;
 import org.project.annotations.Qualifier;
+import org.project.annotations.Scheduled;
 import org.project.annotations.Service;
 import org.project.annotations.Value;
 import org.reflections.Reflections;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class MySpringFramework {
     private Map<String, Object> beans = new HashMap<>();
     private Properties properties = new Properties();
     private String[] activeProfiles;
+    private ScheduledExecutorService scheduledExecutor;
 
     public static void run(Class<?> primarySource, String... args) {
         try {
@@ -38,6 +64,7 @@ public class MySpringFramework {
 
     public void scan(Class<?> primarySource) throws Exception {
         Reflections reflections = new Reflections(primarySource.getPackage().getName());
+        scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
         loadProperties(primarySource);
 
         Set<Class<?>> serviceTypes = reflections.getTypesAnnotatedWith(Service.class);
@@ -59,6 +86,8 @@ public class MySpringFramework {
             performSetterInjection(serviceClass);
         }
         performFieldInjection();
+        scheduleTasks();
+
     }
 
     private void instantiateBean(Class<?> serviceClass)
@@ -232,4 +261,63 @@ public class MySpringFramework {
         }
         return null;
     }
+
+    private void scheduleTasks() {
+        for (Object bean : beans.values()) {
+            Class<?> beanClass = bean.getClass();
+            Method[] methods = beanClass.getDeclaredMethods();
+            for (Method method : methods) {
+                if (method.isAnnotationPresent(Scheduled.class)) {
+                    Scheduled scheduledAnnotation = method.getAnnotation(Scheduled.class);
+                    String cronExpression = scheduledAnnotation.cron();
+                    if (!cronExpression.isEmpty()) {
+                        scheduledExecutor.scheduleAtFixedRate(() -> {
+                            try {
+                                method.invoke(bean);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }, getNextDelay(cronExpression), getInterval(cronExpression), TimeUnit.SECONDS);
+
+                    } else {
+                        long initialDelay = scheduledAnnotation.initialDelay();
+                        long fixedRate = scheduledAnnotation.fixedRate();
+                        TimeUnit timeUnit = scheduledAnnotation.timeUnit();
+                        scheduledExecutor.scheduleAtFixedRate(() -> {
+                            try {
+                                method.invoke(bean);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }, initialDelay, fixedRate, timeUnit);
+
+                    }
+
+                }
+            }
+        }
+    }
+
+    private long getNextDelay(String cronExpression) {
+        CronParser parser = new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.QUARTZ));
+        Cron cron = parser.parse(cronExpression);
+        ZonedDateTime now = ZonedDateTime.now();
+        Optional<ZonedDateTime> nextExecutionOptional = ExecutionTime.forCron(cron).nextExecution(now);
+        ZonedDateTime nextExecution = nextExecutionOptional.orElse(null);
+        Duration duration = Duration.between(now, nextExecution);
+        return duration.getSeconds();
+    }
+
+    private long getInterval(String cronExpression) {
+        CronParser parser = new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.QUARTZ));
+        Cron cron = parser.parse(cronExpression);
+        List<ZonedDateTime> executionTimes = ExecutionTime.forCron(cron).getExecutionDates(ZonedDateTime.now(),
+                ZonedDateTime.now().plusYears(1));
+        if (executionTimes.size() > 1) {
+            Duration duration = Duration.between(executionTimes.get(0), executionTimes.get(1));
+            return duration.getSeconds();
+        }
+        return 0;
+    }
+
 }
