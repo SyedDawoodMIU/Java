@@ -15,16 +15,20 @@ import com.cronutils.model.time.ExecutionTime;
 import com.cronutils.model.time.generator.*;
 import com.cronutils.parser.CronParser;
 
+import java.beans.EventHandler;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.Duration;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +53,7 @@ public class MySpringFramework {
     private Properties properties = new Properties();
     private String[] activeProfiles;
     private ScheduledExecutorService scheduledExecutor;
+    private static Map<Class<?>, List<EventHandlerWrapper>> eventListners = new HashMap<>();
 
     public static void run(Class<?> primarySource, String... args) {
         try {
@@ -86,6 +91,7 @@ public class MySpringFramework {
             performSetterInjection(serviceClass);
         }
         performFieldInjection();
+        registerEventListner();
         scheduleTasks();
 
     }
@@ -318,6 +324,55 @@ public class MySpringFramework {
             return duration.getSeconds();
         }
         return 0;
+    }
+
+    public static void publishEvent(Object event) {
+        List<EventHandlerWrapper> handlers = eventListners.getOrDefault(event.getClass(), Collections.emptyList());
+        for (EventHandlerWrapper handlerWrapper : handlers) {
+            try {
+                handlerWrapper.invoke(event);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void registerEventListner() throws InstantiationException, IllegalAccessException, IllegalArgumentException,
+            InvocationTargetException, NoSuchMethodException, SecurityException {
+        for (Object bean : beans.values()) {
+            Class<?> beanClass = bean.getClass();
+            Method[] methods = beanClass.getDeclaredMethods();
+            for (Method method : methods) {
+                if (method.isAnnotationPresent(org.project.annotations.EventListner.class)) {
+                    Class<?>[] parameterTypes = method.getParameterTypes();
+                    if (parameterTypes.length == 1) {
+                        Class<?> eventType = parameterTypes[0];
+                        if (!eventListners.containsKey(eventType)) {
+                            eventListners.put(eventType, Arrays.asList(new EventHandlerWrapper(bean, method)));
+
+                        } else {
+                            List<EventHandlerWrapper> handlers = eventListners.get(eventType);
+                            handlers.add(new EventHandlerWrapper(bean, method));
+                            eventListners.put(eventType, handlers);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private static class EventHandlerWrapper {
+        private final Object bean;
+        private final Method method;
+
+        public EventHandlerWrapper(Object bean, Method method) {
+            this.bean = bean;
+            this.method = method;
+        }
+
+        public void invoke(Object event) throws IllegalAccessException, InvocationTargetException {
+            method.invoke(bean, event);
+        }
     }
 
 }

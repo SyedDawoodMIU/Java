@@ -1,6 +1,7 @@
 package org.project;
 
 import org.project.annotations.Autowired;
+import org.project.annotations.EventListner;
 import org.project.annotations.Profile;
 import org.project.annotations.Scheduled;
 import org.project.services.IService2;
@@ -18,10 +19,16 @@ public class Main implements Runnable {
 
     }
 
+    @EventListner
+    public void onEvent(MyEvent event) {
+        System.out.println("Event" + event.getMessage());
+    }
+
     @Override
     @Scheduled(cron = "0 15 10 ? * *")
     // @Scheduled(fixedRate = 2)
     public void run() {
         System.out.println(myService2.getHello());
+        MySpringFramework.publishEvent(new MyEvent("Hello World!"));
     }
 }
