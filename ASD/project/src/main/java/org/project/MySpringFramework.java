@@ -21,9 +21,21 @@ public class MySpringFramework {
     private Map<String, Object> beans = new HashMap<>();
     private Properties properties = new Properties();
 
-    public void scan(String basePackage) throws Exception {
-        Reflections reflections = new Reflections(basePackage);
-        loadProperties();
+    public static void run(Class<?> primarySource, String... args) {
+        try {
+            MySpringFramework framework = new MySpringFramework();
+            framework.scan(primarySource);
+            Object mainClassInstance = framework.beans.get(primarySource.getName());
+            mainClassInstance.getClass().getDeclaredMethod("run").invoke(mainClassInstance);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void scan(Class<?> primarySource) throws Exception {
+        Reflections reflections = new Reflections(primarySource.getPackage().getName());
+        loadProperties(primarySource);
 
         Set<Class<?>> serviceTypes = reflections.getTypesAnnotatedWith(Service.class);
         for (Class<?> serviceClass : serviceTypes) {
@@ -43,8 +55,8 @@ public class MySpringFramework {
         performFieldInjection();
     }
 
-    private void loadProperties() throws IOException {
-        try (InputStream input = getClass().getClassLoader().getResourceAsStream("application.properties")) {
+    private void loadProperties(Class<?> primarySource) throws IOException {
+        try (InputStream input = primarySource.getClassLoader().getResourceAsStream("application.properties")) {
             if (input == null) {
                 throw new FileNotFoundException("application.properties file not found");
             }
@@ -107,14 +119,18 @@ public class MySpringFramework {
                 // find annotated fields
                 for (Field field : serviceClass.getDeclaredFields()) {
                     if (field.isAnnotationPresent(Autowired.class)) {
-                        Qualifier qualifierAnnotation = field.getAnnotation(Qualifier.class);
-                        String qualifierValue = qualifierAnnotation.value();
+
                         Object instance;
-                        if (!qualifierValue.isEmpty()) {
-                            instance = getBeanByQualifier(field.getType(), qualifierValue);
-                            if (instance != null) {
-                                field.setAccessible(true);
-                                field.set(serviceInstance, instance);
+                        if (field.isAnnotationPresent(Qualifier.class)) {
+                            Qualifier qualifierAnnotation = field.getAnnotation(Qualifier.class);
+                            String qualifierValue = qualifierAnnotation.value();
+
+                            if (!qualifierValue.isEmpty()) {
+                                instance = getBeanByQualifier(field.getType(), qualifierValue);
+                                if (instance != null) {
+                                    field.setAccessible(true);
+                                    field.set(serviceInstance, instance);
+                                }
                             }
                         } else {
                             instance = getBean(field.getType());
