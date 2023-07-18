@@ -24,6 +24,11 @@ public class Main implements Runnable {
         System.out.println("Event" + event.getMessage());
     }
 
+    @EventListner
+    public void onNewEvent(MyEvent event) {
+        System.out.println("New " + event.getMessage());
+    }
+
     @Override
     @Scheduled(cron = "0 15 10 ? * *")
     // @Scheduled(fixedRate = 2)

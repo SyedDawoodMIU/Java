@@ -20,6 +20,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -27,12 +28,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
-import org.project.annotations.Autowired;
-import org.project.annotations.Profile;
-import org.project.annotations.Qualifier;
-import org.project.annotations.Scheduled;
-import org.project.annotations.Service;
-import org.project.annotations.Value;
+
+import org.project.annotations.*;
 import org.reflections.Reflections;
 
 public class MySpringFramework {
@@ -50,8 +47,7 @@ public class MySpringFramework {
      * the Cron expression syntax.
      * 
      * The method then retrieves the main class instance from the beans map, and
-     * invokes its "run" method,
-     * if it exists.
+     * invokes its "run" method, if it exists.
      * 
      * @param primarySource the main class of the Spring Framework application
      * @param args          command line arguments
@@ -74,8 +70,7 @@ public class MySpringFramework {
     /**
      * This class represents a simple Spring Framework implementation.
      * It provides methods to scan for annotated classes, instantiate beans, perform
-     * dependency injection,
-     * and schedule tasks using the Cron expression syntax.
+     * dependency injection, and schedule tasks using the Cron expression syntax.
      * 
      * The class uses the Reflections library to scan for classes annotated with
      * the @Service annotation.
@@ -210,18 +205,16 @@ public class MySpringFramework {
      * inject an instance of the required type.
      * If a constructor has multiple parameters, the framework will attempt to
      * inject instances of the required types in the order they appear.
-     * If a constructor parameter is annotated with @Qualifier, the framework will
-     * attempt to inject an instance of the required type with the specified
-     * qualifier value.
-     * If a constructor parameter is annotated with @Value, the framework will
-     * attempt to inject a value from the properties file with the specified key.
      *
      * @param serviceClass the class to perform constructor injection on
+     * @throws InvocationTargetException
+     * @throws IllegalArgumentException
+     * @throws IllegalAccessException
+     * @throws InstantiationException
      */
 
     private void performConstructorInjection(Class<?> serviceClass)
-            throws InstantiationException, IllegalAccessException, InvocationTargetException, IllegalArgumentException,
-            NoSuchMethodException, SecurityException {
+            throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         Constructor<?>[] constructors = serviceClass.getDeclaredConstructors();
 
         for (Constructor<?> constructor : constructors) {
@@ -244,8 +237,6 @@ public class MySpringFramework {
      * If a method is annotated with @Qualifier, the framework will attempt to
      * inject an instance of the required type with the specified qualifier value.
      * The method must have only one parameter.
-     * If a method is annotated with @Value, the framework will attempt to inject a
-     * value from the properties file with the specified key.
      *
      * @param serviceClass the class to perform setter injection on
      */
@@ -499,7 +490,7 @@ public class MySpringFramework {
 
     /**
      * Registers event listeners by scanning all beans for methods annotated with
-     * {@link org.project.annotations.EventListner}.
+     * {@link EventListner}.
      * The method should have only one parameter, which is the event type.
      * If the event type is not registered, a new list of event handlers is created
      * and added to the event listeners map.
@@ -513,18 +504,12 @@ public class MySpringFramework {
             Class<?> beanClass = bean.getClass();
             Method[] methods = beanClass.getDeclaredMethods();
             for (Method method : methods) {
-                if (method.isAnnotationPresent(org.project.annotations.EventListner.class)) {
+                if (method.isAnnotationPresent(EventListner.class)) {
                     Class<?>[] parameterTypes = method.getParameterTypes();
                     if (parameterTypes.length == 1) {
                         Class<?> eventType = parameterTypes[0];
-                        if (!eventListners.containsKey(eventType)) {
-                            eventListners.put(eventType, Arrays.asList(new EventHandlerWrapper(bean, method)));
-
-                        } else {
-                            List<EventHandlerWrapper> handlers = eventListners.get(eventType);
-                            handlers.add(new EventHandlerWrapper(bean, method));
-                            eventListners.put(eventType, handlers);
-                        }
+                        eventListners.computeIfAbsent(eventType, k -> new ArrayList<EventHandlerWrapper>())
+                                .add(new EventHandlerWrapper(bean, method));
                     }
                 }
             }
