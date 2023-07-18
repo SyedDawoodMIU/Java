@@ -1,4 +1,4 @@
-package org.project.services;
+package org.example.services;
 
 public interface IService {
 

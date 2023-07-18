@@ -1,4 +1,4 @@
-package org.project.services;
+package org.example.services;
 
 import org.project.annotations.Autowired;
 import org.project.annotations.Qualifier;
@@ -11,6 +11,7 @@ public class MyService2 implements IService2 {
     @Value("MyService2")
     private String name;
 
+    @Autowired
     private IService myService;
 
     @Autowired
