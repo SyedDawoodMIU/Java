@@ -34,8 +34,6 @@ public class MySpringFramework {
     private List<Method> allMethods;
     private static Map<Class<?>, List<EventHandlerWrapper>> eventListners = new HashMap<>();
 
-    /**
-     */
     public static void run(Class<?> primarySource, String... args) {
         try {
             MySpringFramework framework = new MySpringFramework();
@@ -52,8 +50,6 @@ public class MySpringFramework {
         }
     }
 
-    /**
-     */
     private void scan(Class<?> primarySource) throws Exception {
         Reflections reflections = new Reflections(primarySource.getPackage().getName());
         scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
@@ -111,12 +107,7 @@ public class MySpringFramework {
                             Object aspectClass = beans.get(serviceClass.getName());
                             InvocationHandler handler = new AroundProxy(targetClass, aspectClass, serviceMethod,
                                     method);
-                            Object proxyObject = Proxy.newProxyInstance(
-                                    targetClass.getClass().getClassLoader(),
-                                    targetClass.getClass().getInterfaces(),
-                                    handler);
-
-                            beans.replace(serviceMethod.getDeclaringClass().getName(), proxyObject);
+                            getProxyObject(serviceMethod, targetClass, handler);
                         }
 
                     }
@@ -138,12 +129,7 @@ public class MySpringFramework {
                             Object aspectClass = beans.get(serviceClass.getName());
                             InvocationHandler handler = new BeforeProxy(targetClass, aspectClass, serviceMethod,
                                     method);
-                            Object proxyObject = Proxy.newProxyInstance(
-                                    targetClass.getClass().getClassLoader(),
-                                    targetClass.getClass().getInterfaces(),
-                                    handler);
-
-                            beans.replace(serviceMethod.getDeclaringClass().getName(), proxyObject);
+                            getProxyObject(serviceMethod, targetClass, handler);
                         }
 
                     }
@@ -165,12 +151,7 @@ public class MySpringFramework {
                             Object aspectClass = beans.get(serviceClass.getName());
                             InvocationHandler handler = new AfterProxy(targetClass, aspectClass, serviceMethod,
                                     method);
-                            Object proxyObject = Proxy.newProxyInstance(
-                                    targetClass.getClass().getClassLoader(),
-                                    targetClass.getClass().getInterfaces(),
-                                    handler);
-
-                            beans.replace(serviceMethod.getDeclaringClass().getName(), proxyObject);
+                            getProxyObject(serviceMethod, targetClass, handler);
                         }
 
                     }
@@ -180,16 +161,20 @@ public class MySpringFramework {
         }
     }
 
-    /**
-     */
+    private void getProxyObject(Method serviceMethod, Object targetClass, InvocationHandler handler) {
+        Object proxyObject = Proxy.newProxyInstance(
+                targetClass.getClass().getClassLoader(),
+                targetClass.getClass().getInterfaces(),
+                handler);
+
+        beans.replace(serviceMethod.getDeclaringClass().getName(), proxyObject);
+    }
+
     private boolean matchesPointcut(Method method, String pointcut) {
         String classAndMethod = method.getDeclaringClass().getSimpleName() + "." + method.getName();
         return classAndMethod.equals(pointcut);
     }
 
-    /**
-     *
-     */
     private void instantiateBean(Class<?> serviceClass)
             throws InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         Constructor<?>[] constructors = serviceClass.getConstructors();
@@ -211,10 +196,6 @@ public class MySpringFramework {
         }
     }
 
-    /**
-     *
-     */
-
     private void loadProperties(Class<?> primarySource) throws IOException {
         try (InputStream input = primarySource.getClassLoader().getResourceAsStream("application.properties")) {
             if (input == null) {
@@ -227,9 +208,6 @@ public class MySpringFramework {
         }
     }
 
-    /**
-     *
-     */
     private String[] loadActiveProfiles(Properties properties) {
         String activeProfiles = properties.getProperty("spring.profiles.active");
         if (activeProfiles != null && !activeProfiles.isEmpty()) {
@@ -237,10 +215,6 @@ public class MySpringFramework {
         }
         return new String[0];
     }
-
-    /**
-     *
-     */
 
     private boolean shouldInstantiateBean(String[] profileValues) {
         if (profileValues.length == 0) {
@@ -255,10 +229,6 @@ public class MySpringFramework {
 
         return false;
     }
-
-    /**
-     *
-     */
 
     private void performConstructorInjection(Class<?> serviceClass)
             throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
@@ -276,10 +246,6 @@ public class MySpringFramework {
             }
         }
     }
-
-    /**
-     *
-     */
 
     private void performSetterInjection(Class<?> serviceClass)
             throws IllegalAccessException, InvocationTargetException {
@@ -311,8 +277,6 @@ public class MySpringFramework {
         }
     }
 
-    /**
-     */
     private void performFieldInjection() {
         try {
             for (Object serviceInstance : beans.values()) {
@@ -361,8 +325,6 @@ public class MySpringFramework {
         }
     }
 
-    /**
-     */
     private Object getBean(Class<?> interfaceClass) {
         try {
             for (Object theClass : beans.values()) {
@@ -378,15 +340,10 @@ public class MySpringFramework {
         return null;
     }
 
-    /**
-     *
-     */
     private Object getBean(String beanName) {
         return beans.get(beanName);
     }
 
-    /**
-     */
     private Object getBeanByQualifier(Class<?> type, String qualifierValue) {
         try {
             for (Object theClass : beans.values()) {
@@ -402,8 +359,6 @@ public class MySpringFramework {
         return null;
     }
 
-    /**
-     */
     private void scheduleTasks() {
         for (Object bean : beans.values()) {
             Class<?> beanClass = bean.getClass();
@@ -428,9 +383,6 @@ public class MySpringFramework {
         }
     }
 
-    /**
-     *
-     */
     private void invokeMethod(Object bean, Method method) {
         if (method.isAnnotationPresent(Async.class)) {
             CompletableFuture.runAsync(() -> {
@@ -451,8 +403,6 @@ public class MySpringFramework {
 
     }
 
-    /**
-     */
     private long getNextDelay(String cronExpression) {
         CronParser parser = new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.QUARTZ));
         Cron cron = parser.parse(cronExpression);
@@ -463,8 +413,6 @@ public class MySpringFramework {
         return duration.getSeconds();
     }
 
-    /**
-     */
     private long getInterval(String cronExpression) {
         CronParser parser = new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.QUARTZ));
         Cron cron = parser.parse(cronExpression);
@@ -477,8 +425,6 @@ public class MySpringFramework {
         return 0;
     }
 
-    /**
-     */
     public static void publishEvent(Object event) {
         List<EventHandlerWrapper> handlers = eventListners.getOrDefault(event.getClass(), Collections.emptyList());
         for (EventHandlerWrapper handlerWrapper : handlers) {
@@ -490,8 +436,6 @@ public class MySpringFramework {
         }
     }
 
-    /**
-     */
     private void registerEventListner() throws InstantiationException, IllegalAccessException, IllegalArgumentException,
             InvocationTargetException, NoSuchMethodException, SecurityException {
         for (Object bean : beans.values()) {
