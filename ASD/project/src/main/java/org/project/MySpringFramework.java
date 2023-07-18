@@ -14,8 +14,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.lang.reflect.Proxy;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
@@ -28,20 +31,10 @@ public class MySpringFramework {
     private Properties properties = new Properties();
     private String[] activeProfiles;
     private ScheduledExecutorService scheduledExecutor;
+    private List<Method> allMethods;
     private static Map<Class<?>, List<EventHandlerWrapper>> eventListners = new HashMap<>();
 
     /**
-     * This method is used to run the Spring Framework application.
-     * It creates an instance of the MySpringFramework class, scans for annotated
-     * classes,
-     * instantiates beans, performs dependency injection, and schedules tasks using
-     * the Cron expression syntax.
-     * 
-     * The method then retrieves the main class instance from the beans map, and
-     * invokes its "run" method, if it exists.
-     * 
-     * @param primarySource the main class of the Spring Framework application
-     * @param args          command line arguments
      */
     public static void run(Class<?> primarySource, String... args) {
         try {
@@ -51,6 +44,7 @@ public class MySpringFramework {
 
             if (mainClassInstance.getClass().getDeclaredMethod("run") != null) {
                 mainClassInstance.getClass().getDeclaredMethod("run").invoke(mainClassInstance);
+
             }
 
         } catch (Exception e) {
@@ -59,29 +53,12 @@ public class MySpringFramework {
     }
 
     /**
-     * This class represents a simple Spring Framework implementation.
-     * It provides methods to scan for annotated classes, instantiate beans, perform
-     * dependency injection, and schedule tasks using the Cron expression syntax.
-     * 
-     * The class uses the Reflections library to scan for classes annotated with
-     * the @Service annotation.
-     * It then instantiates beans for these classes using their no-argument
-     * constructors, and performs dependency injection
-     * using constructor injection, setter injection, and field injection.
-     * 
-     * The class also supports the @Profile annotation, which allows for conditional
-     * bean instantiation based on the active profiles
-     * specified in the "application.properties" file.
-     * 
-     * Finally, the class provides a method to schedule tasks using the Cron
-     * expression syntax, using the CronUtils library.
-     * 
-     * @see <a href="https://github.com/ronmamo/reflections">Reflections library</a>
-     * @see <a href="https://github.com/jmrozanec/cron-utils">CronUtils library</a>
      */
     private void scan(Class<?> primarySource) throws Exception {
         Reflections reflections = new Reflections(primarySource.getPackage().getName());
         scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
+        allMethods = new ArrayList<>();
+
         loadProperties(primarySource);
 
         Set<Class<?>> serviceTypes = reflections.getTypesAnnotatedWith(Service.class);
@@ -98,23 +75,120 @@ public class MySpringFramework {
 
         }
 
-        for (Class<?> serviceClass : serviceTypes) {
-            performConstructorInjection(serviceClass);
-            performSetterInjection(serviceClass);
-        }
-        performFieldInjection();
+        perfumDI(serviceTypes);
         registerEventListner();
+
+        for (Class<?> serviceClass : serviceTypes) {
+            processBeforeAnnotations(serviceClass);
+            processAfterAnnotations(serviceClass);
+            processAroundAnnotations(serviceClass);
+        }
+
+        perfumDI(serviceTypes);
         scheduleTasks();
 
     }
 
+    private void perfumDI(Set<Class<?>> serviceTypes)
+            throws InstantiationException, IllegalAccessException, InvocationTargetException {
+        for (Class<?> serviceClass : serviceTypes) {
+            performConstructorInjection(serviceClass);
+            performSetterInjection(serviceClass);
+        }
+
+        performFieldInjection();
+    }
+
+    private void processAroundAnnotations(Class<?> serviceClass) {
+        for (Method method : serviceClass.getDeclaredMethods()) {
+            if (method.isAnnotationPresent(Around.class)) {
+                Around annotation = method.getAnnotation(Around.class);
+                String pointcut = annotation.pointcut();
+                if (!pointcut.isEmpty()) {
+                    for (Method serviceMethod : allMethods) {
+                        if (matchesPointcut(serviceMethod, pointcut)) {
+                            Object targetClass = beans.get(serviceMethod.getDeclaringClass().getName());
+                            Object aspectClass = beans.get(serviceClass.getName());
+                            InvocationHandler handler = new AroundProxy(targetClass, aspectClass, serviceMethod,
+                                    method);
+                            Object proxyObject = Proxy.newProxyInstance(
+                                    targetClass.getClass().getClassLoader(),
+                                    targetClass.getClass().getInterfaces(),
+                                    handler);
+
+                            beans.replace(serviceMethod.getDeclaringClass().getName(), proxyObject);
+                        }
+
+                    }
+
+                }
+            }
+        }
+    }
+
+    private void processBeforeAnnotations(Class<?> serviceClass) {
+        for (Method method : serviceClass.getDeclaredMethods()) {
+            if (method.isAnnotationPresent(Before.class)) {
+                Before beforeAnnotation = method.getAnnotation(Before.class);
+                String pointcut = beforeAnnotation.pointcut();
+                if (!pointcut.isEmpty()) {
+                    for (Method serviceMethod : allMethods) {
+                        if (matchesPointcut(serviceMethod, pointcut)) {
+                            Object targetClass = beans.get(serviceMethod.getDeclaringClass().getName());
+                            Object aspectClass = beans.get(serviceClass.getName());
+                            InvocationHandler handler = new BeforeProxy(targetClass, aspectClass, serviceMethod,
+                                    method);
+                            Object proxyObject = Proxy.newProxyInstance(
+                                    targetClass.getClass().getClassLoader(),
+                                    targetClass.getClass().getInterfaces(),
+                                    handler);
+
+                            beans.replace(serviceMethod.getDeclaringClass().getName(), proxyObject);
+                        }
+
+                    }
+
+                }
+            }
+        }
+    }
+
+    private void processAfterAnnotations(Class<?> serviceClass) {
+        for (Method method : serviceClass.getDeclaredMethods()) {
+            if (method.isAnnotationPresent(After.class)) {
+                After annotation = method.getAnnotation(After.class);
+                String pointcut = annotation.pointcut();
+                if (!pointcut.isEmpty()) {
+                    for (Method serviceMethod : allMethods) {
+                        if (matchesPointcut(serviceMethod, pointcut)) {
+                            Object targetClass = beans.get(serviceMethod.getDeclaringClass().getName());
+                            Object aspectClass = beans.get(serviceClass.getName());
+                            InvocationHandler handler = new AfterProxy(targetClass, aspectClass, serviceMethod,
+                                    method);
+                            Object proxyObject = Proxy.newProxyInstance(
+                                    targetClass.getClass().getClassLoader(),
+                                    targetClass.getClass().getInterfaces(),
+                                    handler);
+
+                            beans.replace(serviceMethod.getDeclaringClass().getName(), proxyObject);
+                        }
+
+                    }
+
+                }
+            }
+        }
+    }
+
     /**
-     * Instantiates a bean for the given service class if it has a no-argument
-     * constructor.
-     * The instantiated bean is then added to the map of beans with the service
-     * class name as the key.
+     */
+    private boolean matchesPointcut(Method method, String pointcut) {
+        String classAndMethod = method.getDeclaringClass().getSimpleName() + "." + method.getName();
+        return classAndMethod.equals(pointcut);
+    }
+
+    /**
      *
-     * @param serviceClass the service class to instantiate a bean for
      */
     private void instantiateBean(Class<?> serviceClass)
             throws InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
@@ -123,17 +197,22 @@ public class MySpringFramework {
         if (constructors.length == 1 && constructors[0].getParameterCount() == 0) {
             Object instance = serviceClass.getDeclaredConstructor().newInstance();
             beans.put(serviceClass.getName(), instance);
+        } else if (constructors[0].getParameterCount() > 0) {
+
+            Constructor<?> constructor = constructors[0];
+            Object[] constructorArgs = new Object[constructor.getParameterCount()];
+            int i = 0;
+            for (Parameter parameter : constructor.getParameters()) {
+                constructorArgs[i++] = null;
+            }
+            Object instance = constructor.newInstance(constructorArgs);
+            beans.put(serviceClass.getName(), instance);
+
         }
     }
 
     /**
-     * Loads the application properties from the "application.properties" file
-     * located in the classpath of the primary source.
-     * If the file is not found, a FileNotFoundException is thrown.
-     * The active profiles are also loaded from the properties file using the
-     * "spring.profiles.active" property.
      *
-     * @param primarySource the primary source class used to locate the
      */
 
     private void loadProperties(Class<?> primarySource) throws IOException {
@@ -149,12 +228,7 @@ public class MySpringFramework {
     }
 
     /**
-     * Loads the active profiles from the application.properties file.
-     * If the "spring.profiles.active" property is not specified, an empty array is
-     * returned.
      *
-     * @param properties the Properties object containing the application properties
-     * @return an array of active profiles, or an empty array if no profiles are
      */
     private String[] loadActiveProfiles(Properties properties) {
         String activeProfiles = properties.getProperty("spring.profiles.active");
@@ -165,15 +239,7 @@ public class MySpringFramework {
     }
 
     /**
-     * Determines whether a bean should be instantiated based on its profile
-     * annotation and the active profiles.
-     * If no specific profiles are specified, the bean will be instantiated for all
-     * profiles.
-     * If the bean's profile matches the active profile, the bean will be
-     * instantiated.
      *
-     * @param profileValues the profile values specified in the bean's profile
-     * @return true if the bean should be instantiated, false otherwise
      */
 
     private boolean shouldInstantiateBean(String[] profileValues) {
@@ -191,17 +257,7 @@ public class MySpringFramework {
     }
 
     /**
-     * Performs constructor injection for all beans in the container.
-     * If a constructor is annotated with @Autowired, the framework will attempt to
-     * inject an instance of the required type.
-     * If a constructor has multiple parameters, the framework will attempt to
-     * inject instances of the required types in the order they appear.
      *
-     * @param serviceClass the class to perform constructor injection on
-     * @throws InvocationTargetException
-     * @throws IllegalArgumentException
-     * @throws IllegalAccessException
-     * @throws InstantiationException
      */
 
     private void performConstructorInjection(Class<?> serviceClass)
@@ -222,19 +278,14 @@ public class MySpringFramework {
     }
 
     /**
-     * Performs setter injection for all beans in the container.
-     * If a method is annotated with @Autowired, the framework will attempt to
-     * inject an instance of the required type.
-     * If a method is annotated with @Qualifier, the framework will attempt to
-     * inject an instance of the required type with the specified qualifier value.
-     * The method must have only one parameter.
      *
-     * @param serviceClass the class to perform setter injection on
      */
 
     private void performSetterInjection(Class<?> serviceClass)
             throws IllegalAccessException, InvocationTargetException {
         Method[] methods = serviceClass.getDeclaredMethods();
+        allMethods.addAll(Arrays.asList(methods));
+
         for (Method method : methods) {
             if (method.isAnnotationPresent(Autowired.class)) {
                 Class<?>[] parameterTypes = method.getParameterTypes();
@@ -261,13 +312,6 @@ public class MySpringFramework {
     }
 
     /**
-     * Performs field injection for all beans in the container.
-     * If a field is annotated with @Autowired, the framework will attempt to inject
-     * an instance of the required type.
-     * If a field is annotated with @Qualifier, the framework will attempt to inject
-     * an instance of the required type with the specified qualifier value.
-     * If a field is annotated with @Value, the framework will attempt to inject a
-     * value from the properties file with the specified key.
      */
     private void performFieldInjection() {
         try {
@@ -318,10 +362,6 @@ public class MySpringFramework {
     }
 
     /**
-     * Returns an instance of a bean that implements the specified interface.
-     * 
-     * @param interfaceClass the interface class of the bean
-     * @return an instance of the bean that implements the specified interface, or
      */
     private Object getBean(Class<?> interfaceClass) {
         try {
@@ -339,21 +379,13 @@ public class MySpringFramework {
     }
 
     /**
-     * Returns the bean instance with the specified name.
      *
-     * @param beanName the name of the bean to retrieve
-     * @return the bean instance with the specified name, or null if not found
      */
     private Object getBean(String beanName) {
         return beans.get(beanName);
     }
 
     /**
-     * Returns an instance of a bean by its qualifier value.
-     * 
-     * @param type           the class type of the bean
-     * @param qualifierValue the qualifier value of the bean
-     * @return an instance of the bean with the specified qualifier value, or null
      */
     private Object getBeanByQualifier(Class<?> type, String qualifierValue) {
         try {
@@ -371,12 +403,6 @@ public class MySpringFramework {
     }
 
     /**
-     * Schedules tasks based on the @Scheduled annotation present on methods of
-     * beans.
-     * If the method has a cron expression specified, the task is scheduled to run
-     * at the specified intervals.
-     * If the method has an initial delay, fixed rate, and time unit specified, the
-     * task is scheduled to run at fixed intervals.
      */
     private void scheduleTasks() {
         for (Object bean : beans.values()) {
@@ -403,10 +429,7 @@ public class MySpringFramework {
     }
 
     /**
-     * Invokes the given method.
      *
-     * @param bean   the bean instance
-     * @param method the method to invoke
      */
     private void invokeMethod(Object bean, Method method) {
         if (method.isAnnotationPresent(Async.class)) {
@@ -429,16 +452,6 @@ public class MySpringFramework {
     }
 
     /**
-     * Calculates the delay until the next execution of a scheduled task based on
-     * the provided cron expression.
-     * Parses the cron expression using the Quartz cron definition.
-     * Calculates the next execution time of the cron expression after the current
-     * time.
-     * Calculates the duration between the current time and the next execution time
-     * and returns the duration in seconds.
-     * 
-     * @param cronExpression the cron expression used to schedule the task.
-     * @return the delay until the next execution of the scheduled task in seconds.
      */
     private long getNextDelay(String cronExpression) {
         CronParser parser = new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.QUARTZ));
@@ -451,16 +464,6 @@ public class MySpringFramework {
     }
 
     /**
-     * Calculates the interval between two consecutive executions of a scheduled
-     * task based on the provided cron expression.
-     * Parses the cron expression using the Quartz cron definition.
-     * Calculates the next two execution times of the cron expression within the
-     * next year.
-     * Calculates the duration between the first two execution times and returns the
-     * duration in seconds.
-     * 
-     * @param cronExpression the cron expression used to schedule the task.
-     * @return the interval between two consecutive executions of the scheduled task
      */
     private long getInterval(String cronExpression) {
         CronParser parser = new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.QUARTZ));
@@ -475,12 +478,6 @@ public class MySpringFramework {
     }
 
     /**
-     * Publishes an event to all registered event listeners for that event type.
-     * Retrieves the list of event handlers for the given event type from the event
-     * listeners map.
-     * Invokes each event handler with the given event object.
-     * 
-     * @param event the event object to be published.
      */
     public static void publishEvent(Object event) {
         List<EventHandlerWrapper> handlers = eventListners.getOrDefault(event.getClass(), Collections.emptyList());
@@ -494,14 +491,6 @@ public class MySpringFramework {
     }
 
     /**
-     * Registers event listeners by scanning all beans for methods annotated with
-     * {@link EventListner}.
-     * The method should have only one parameter, which is the event type.
-     * If the event type is not registered, a new list of event handlers is created
-     * and added to the event listeners map.
-     * If the event type is already registered, the new event handler is added to
-     * the existing list of event handlers.
-     * 
      */
     private void registerEventListner() throws InstantiationException, IllegalAccessException, IllegalArgumentException,
             InvocationTargetException, NoSuchMethodException, SecurityException {

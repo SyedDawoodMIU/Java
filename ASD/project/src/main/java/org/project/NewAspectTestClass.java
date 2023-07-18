@@ -3,17 +3,12 @@ package org.project;
 import org.project.annotations.Service;
 
 @Service
-public class MyEvent {
+public class NewAspectTestClass implements INewAspectTestClass {
     private String message;
 
-    public MyEvent(String message) {
-        this.message = message;
-    }
-
+    @Override
     public String getMessage() {
         return message;
     }
 
 }
-
-
