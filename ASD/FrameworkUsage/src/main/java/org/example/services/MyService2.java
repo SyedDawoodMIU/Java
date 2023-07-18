@@ -15,7 +15,7 @@ public class MyService2 implements IService2 {
     private IService myService;
 
     @Autowired
-    @Qualifier("org.project.services.MyServiceNew")
+    @Qualifier("org.example.services.MyServiceNew")
     public void setService(IService service) {
         this.myService = service;
     }
