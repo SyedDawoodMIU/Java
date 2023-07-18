@@ -2,10 +2,6 @@ package org.project;
 
 import java.time.Duration;
 import java.time.ZonedDateTime;
-import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import com.cronutils.model.Cron;
 import com.cronutils.model.CronType;
@@ -20,14 +16,9 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 import org.project.annotations.*;
 import org.reflections.Reflections;
@@ -396,31 +387,45 @@ public class MySpringFramework {
                     Scheduled scheduledAnnotation = method.getAnnotation(Scheduled.class);
                     String cronExpression = scheduledAnnotation.cron();
                     if (!cronExpression.isEmpty()) {
-                        scheduledExecutor.scheduleAtFixedRate(() -> {
-                            try {
-                                method.invoke(bean);
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                        }, getNextDelay(cronExpression), getInterval(cronExpression), TimeUnit.SECONDS);
-
+                        scheduledExecutor.scheduleAtFixedRate(() -> invokeMethod(bean, method),
+                                getNextDelay(cronExpression), getInterval(cronExpression), TimeUnit.SECONDS);
                     } else {
                         long initialDelay = scheduledAnnotation.initialDelay();
                         long fixedRate = scheduledAnnotation.fixedRate();
                         TimeUnit timeUnit = scheduledAnnotation.timeUnit();
-                        scheduledExecutor.scheduleAtFixedRate(() -> {
-                            try {
-                                method.invoke(bean);
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                        }, initialDelay, fixedRate, timeUnit);
-
+                        scheduledExecutor.scheduleAtFixedRate(() -> invokeMethod(bean, method),
+                                initialDelay, fixedRate, timeUnit);
                     }
 
                 }
             }
         }
+    }
+
+    /**
+     * Invokes the given method.
+     *
+     * @param bean   the bean instance
+     * @param method the method to invoke
+     */
+    private void invokeMethod(Object bean, Method method) {
+        if (method.isAnnotationPresent(Async.class)) {
+            CompletableFuture.runAsync(() -> {
+                try {
+                    method.invoke(bean);
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    e.printStackTrace();
+                }
+            });
+
+        } else {
+            try {
+                method.invoke(bean);
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+            }
+        }
+
     }
 
     /**

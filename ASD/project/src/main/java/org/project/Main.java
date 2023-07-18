@@ -1,5 +1,6 @@
 package org.project;
 
+import org.project.annotations.Async;
 import org.project.annotations.Autowired;
 import org.project.annotations.EventListner;
 import org.project.annotations.Profile;
@@ -30,7 +31,8 @@ public class Main implements Runnable {
     }
 
     @Override
-    @Scheduled(cron = "0 15 10 ? * *")
+    @Scheduled(fixedRate = 2)
+    @Async
     // @Scheduled(fixedRate = 2)
     public void run() {
         System.out.println(myService2.getHello());
